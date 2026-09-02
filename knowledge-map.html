@@ -1,0 +1,2234 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
+<title>Путешествие по Карте Знаний</title>
+<style>
+:root{
+  --ink:#33465C; --ink2:#7B8FA6; --card:#FFFFFF; --line:#DCE7F2;
+  --ok:#6FCB7E; --okbg:#E8F8E7; --bad:#FF9E7A; --badbg:#FFEDE3; --gold:#FFC94D;
+  --sh:0 5px 0 #C9DCEC, 0 12px 24px rgba(51,70,92,.14);
+  --shp:0 5px 0 #E0A32E, 0 12px 24px rgba(51,70,92,.18);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0;padding:0}
+body{
+  font-family:'Comic Sans MS','Trebuchet MS','Segoe UI',system-ui,sans-serif;
+  color:var(--ink); overflow:hidden; user-select:none; background:#EAF6FF;
+  -webkit-user-select:none; touch-action:manipulation;
+}
+#app{position:fixed;inset:0;display:flex;flex-direction:column}
+#bg{position:absolute;inset:0;z-index:0;overflow:hidden;transition:background .8s ease}
+.deco{position:absolute;animation:drift 16s ease-in-out infinite alternate;filter:drop-shadow(0 4px 6px rgba(0,0,0,.07));will-change:transform}
+@keyframes drift{from{transform:translate(0,0) rotate(-6deg)}to{transform:translate(26px,-22px) rotate(8deg)}}
+
+/* ---------- верхняя панель ---------- */
+#topbar{position:relative;z-index:6;display:flex;align-items:center;gap:10px;padding:10px 14px}
+#topbar.hide{display:none}
+.ico{width:54px;height:54px;flex:0 0 54px;border:none;border-radius:18px;background:rgba(255,255,255,.85);
+  font-size:24px;cursor:pointer;box-shadow:0 4px 0 #C9DCEC;color:var(--ink);line-height:1}
+.ico:active{transform:translateY(3px);box-shadow:0 1px 0 #C9DCEC}
+.ico.off{opacity:.45}
+#progWrap{position:relative;flex:1;height:38px;min-width:80px;background:rgba(255,255,255,.85);
+  border-radius:19px;overflow:hidden;box-shadow:inset 0 2px 5px rgba(51,70,92,.12)}
+#progFill{height:100%;width:0%;border-radius:19px;background:linear-gradient(90deg,#A7E9A0,#6FCB7E);transition:width .5s cubic-bezier(.3,1.4,.5,1)}
+#progText{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;color:var(--ink)}
+#crystals{display:flex;gap:5px;flex:0 0 auto}
+.crys{width:26px;height:32px;background:linear-gradient(180deg,#FFF0BE,#C9DCEC);clip-path:polygon(50% 0,100% 32%,72% 100%,28% 100%,0 32%);
+  opacity:.32;transition:.4s}
+.crys.on{background:linear-gradient(180deg,#FFE9A8,#FFB01F);opacity:1;filter:drop-shadow(0 0 8px rgba(255,190,60,.9))}
+
+/* ---------- экраны ---------- */
+main{position:relative;z-index:5;flex:1;min-height:0}
+.screen{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;
+  padding:6px 16px 18px;overflow-y:auto;overscroll-behavior:contain}
+.screen.active{display:flex;animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+h1{font-size:clamp(30px,6vw,54px);margin:6px 0 2px;text-align:center;text-shadow:0 3px 0 rgba(255,255,255,.85)}
+h2{font-size:clamp(22px,4vw,34px);margin:2px 0 12px;text-align:center}
+.sub{color:var(--ink2);font-size:clamp(15px,2.4vw,20px);text-align:center;margin:0 0 14px;max-width:760px}
+.card{background:rgba(255,255,255,.92);border-radius:28px;padding:18px;box-shadow:var(--sh);width:100%;max-width:900px}
+
+/* ---------- кнопки ---------- */
+.btn{min-height:64px;padding:10px 26px;font-size:clamp(18px,2.6vw,24px);font-weight:700;font-family:inherit;
+  border:none;border-radius:26px;background:#fff;color:var(--ink);cursor:pointer;box-shadow:var(--sh);
+  display:inline-flex;align-items:center;justify-content:center;gap:10px;transition:transform .08s}
+.btn:active{transform:translateY(4px);box-shadow:0 1px 0 #C9DCEC}
+.btn.primary{background:linear-gradient(180deg,#FFE7A3,#FFC94D);box-shadow:var(--shp);color:#5A3E00}
+.btn.ok{background:linear-gradient(180deg,#B9EFB6,#7BD98A);box-shadow:0 5px 0 #4EA85C,0 12px 22px rgba(51,70,92,.16);color:#14421C}
+.btn.ghost{background:rgba(255,255,255,.72);box-shadow:0 4px 0 #C9DCEC}
+.btn[disabled]{opacity:.5;pointer-events:none}
+.btnRow{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:14px}
+
+/* ---------- выбор героя ---------- */
+#heroGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(126px,1fr));gap:14px;width:100%;max-width:900px}
+.heroCard{background:#fff;border-radius:26px;padding:10px 8px 12px;text-align:center;cursor:pointer;
+  box-shadow:0 5px 0 #C9DCEC,0 10px 20px rgba(51,70,92,.12);transition:transform .12s;border:4px solid transparent}
+.heroCard:hover{transform:translateY(-4px)}
+.heroCard.sel{border-color:var(--gold);transform:translateY(-4px)}
+.heroFace{font-size:56px;line-height:1.1;display:block}
+.heroName{font-weight:700;font-size:17px;margin-top:2px}
+
+/* ---------- карта ---------- */
+#mapWrap{width:100%;max-width:940px;position:relative;height:min(62vh,520px);margin:6px auto 0}
+.isle{position:absolute;width:168px;padding:12px 8px;border-radius:26px;text-align:center;cursor:pointer;
+  background:rgba(255,255,255,.94);box-shadow:0 6px 0 #C9DCEC,0 14px 26px rgba(51,70,92,.16);transition:transform .15s}
+.isle.locked{opacity:.5;filter:grayscale(.7);cursor:not-allowed}
+.isle.done{border:4px solid var(--ok)}
+.isle .ie{font-size:42px;display:block}
+.isle .in{font-weight:800;font-size:16px;margin-top:2px;line-height:1.15}
+.isle .is{font-size:13px;color:var(--ink2)}
+.isle .st{position:absolute;top:-12px;right:-10px;font-size:26px}
+@keyframes pulse{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+
+/* ---------- игра ---------- */
+#hostRow{display:flex;align-items:flex-end;gap:10px;width:100%;max-width:900px;margin:2px auto 8px;min-height:104px}
+.host{width:92px;height:92px;flex:0 0 92px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:52px;background:#fff;box-shadow:0 6px 0 #C9DCEC,0 10px 20px rgba(51,70,92,.16);animation:pop .5s cubic-bezier(.3,1.6,.5,1)}
+.host.small{width:72px;height:72px;flex:0 0 72px;font-size:40px}
+@keyframes pop{0%{transform:scale(0) rotate(-25deg)}100%{transform:scale(1) rotate(0)}}
+.bubble{position:relative;flex:1;background:#fff;border-radius:24px;padding:14px 50px 14px 18px;
+  font-size:clamp(17px,2.5vw,23px);font-weight:700;line-height:1.3;box-shadow:var(--sh);min-height:76px;display:flex;align-items:center}
+.bubble:after{content:'';position:absolute;left:-12px;bottom:22px;width:0;height:0;border:14px solid transparent;border-right-color:#fff;border-left:0}
+#btnReplay{position:absolute;right:10px;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:14px;
+  border:none;background:#EAF6FF;font-size:22px;cursor:pointer;box-shadow:0 3px 0 #C9DCEC}
+#taskArea{width:100%;max-width:900px;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:6px 0}
+.taskTitle{font-size:clamp(20px,3vw,28px);font-weight:800;text-align:center;margin:0}
+.choices{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;width:100%}
+.opt{min-width:110px;min-height:96px;padding:10px 20px;font-size:clamp(30px,6vw,52px);font-weight:800;font-family:inherit;
+  border:none;border-radius:26px;background:#fff;color:var(--ink);cursor:pointer;box-shadow:0 6px 0 #C9DCEC,0 12px 22px rgba(51,70,92,.14);
+  display:flex;align-items:center;justify-content:center;transition:transform .09s}
+.opt:active{transform:translateY(4px)}
+.opt.wide{min-width:180px;font-size:clamp(22px,3.4vw,30px)}
+.opt.sm{min-width:88px;min-height:78px;font-size:clamp(22px,4vw,34px)}
+.opt.good{background:linear-gradient(180deg,#CBF3C4,#8BDD93);box-shadow:0 6px 0 #4EA85C;color:#14421C;animation:yes .5s}
+.opt.wrong{background:linear-gradient(180deg,#FFE0D2,#FFB79A);box-shadow:0 6px 0 #D9764C;opacity:.75;animation:no .45s}
+.opt.hinted{animation:hintPulse 1.2s infinite}
+@keyframes yes{0%{transform:scale(1)}45%{transform:scale(1.14) rotate(-3deg)}100%{transform:scale(1)}}
+@keyframes no{0%,100%{transform:translateX(0)}25%{transform:translateX(-9px)}75%{transform:translateX(9px)}}
+@keyframes hintPulse{0%,100%{box-shadow:0 6px 0 #C9DCEC,0 0 0 rgba(255,201,77,0)}50%{box-shadow:0 6px 0 #C9DCEC,0 0 26px rgba(255,201,77,1)}}
+
+/* буква / число */
+.bigLetter{font-size:clamp(72px,15vw,140px);font-weight:800;line-height:1;background:#fff;border-radius:36px;
+  padding:8px 34px;box-shadow:var(--sh);letter-spacing:2px}
+.puddle{position:relative;width:100%;max-width:640px;min-height:230px;background:radial-gradient(ellipse at center,#BFE6FF 0%,#8FD0F5 70%,rgba(143,208,245,0) 100%);
+  border-radius:50%;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:12px;padding:24px}
+.puddle .opt{animation:bob 5s ease-in-out infinite alternate}
+@keyframes bob{from{transform:translateY(-7px) rotate(-3deg)}to{transform:translateY(7px) rotate(3deg)}}
+.objects{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:760px;font-size:clamp(30px,6vw,46px)}
+.objects .obj{animation:dropIn .5s backwards}
+@keyframes dropIn{from{transform:translateY(-24px) scale(.4);opacity:0}to{transform:none;opacity:1}}
+
+/* слоги */
+.drift{position:relative;width:100%;max-width:680px;height:200px;overflow:visible}
+.letterFloat{position:absolute;width:96px;height:96px;border-radius:26px;background:#fff;font-size:52px;font-weight:800;
+  display:flex;align-items:center;justify-content:center;box-shadow:0 6px 0 #C9DCEC,0 10px 20px rgba(51,70,92,.16);cursor:pointer;
+  animation:swim 9s ease-in-out infinite alternate}
+.letterFloat.sel{background:linear-gradient(180deg,#FFE7A3,#FFC94D);box-shadow:0 6px 0 #E0A32E}
+@keyframes swim{from{transform:translate(0,0) rotate(-5deg)}to{transform:translate(34px,-26px) rotate(6deg)}}
+.syllResult{font-size:clamp(50px,10vw,88px);font-weight:800;letter-spacing:6px;min-height:96px;display:flex;align-items:center}
+
+/* слова */
+.slots{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;min-height:104px;width:100%}
+.slot{width:104px;height:96px;border-radius:22px;border:4px dashed #B8CFE2;background:rgba(255,255,255,.55);
+  display:flex;align-items:center;justify-content:center;font-size:34px;color:var(--ink2)}
+.pool{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:6px}
+.cube{min-width:96px;height:88px;padding:0 14px;border-radius:22px;background:linear-gradient(180deg,#FFF3D4,#FFD98A);
+  font-size:34px;font-weight:800;display:flex;align-items:center;justify-content:center;cursor:grab;
+  box-shadow:0 6px 0 #DCA93F,0 10px 18px rgba(51,70,92,.16);touch-action:none}
+.cube:active{cursor:grabbing}
+.cube.ghost{position:fixed;z-index:99;pointer-events:none;opacity:.92;transform:scale(1.08) rotate(-3deg);box-shadow:0 14px 26px rgba(0,0,0,.25)}
+.cube.hidden{visibility:hidden}
+.placeholder{width:96px;height:88px;border-radius:22px;border:4px dashed #FFC94D;background:rgba(255,201,77,.15)}
+.wordPic{font-size:clamp(56px,11vw,96px);line-height:1}
+
+/* арифметика */
+.column{font-size:clamp(38px,7vw,62px);font-weight:800;line-height:1.25;text-align:right;
+  background:#fff;border-radius:26px;padding:16px 26px;box-shadow:var(--sh);font-variant-numeric:tabular-nums}
+.column .op{color:#FF9E7A}
+.column .line{border-top:5px solid var(--ink);margin-top:4px;padding-top:4px}
+.column .q{color:var(--ink2)}
+.blocks{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;max-width:760px}
+.ten{display:flex;gap:3px;padding:3px;background:#DCEBFF;border-radius:8px}
+.ten i{width:12px;height:34px;background:#7FB0F0;border-radius:3px;display:block}
+.ten.gone i{background:#FFCDB8}
+.unit{width:30px;height:30px;border-radius:50%;background:#FFD98A;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#7A5A00}
+.unit.gone{background:#FFCDB8;color:#A6553A}
+.grid{display:grid;gap:8px;justify-content:center;font-size:clamp(24px,4.4vw,38px)}
+.grid .cell{width:1.4em;height:1.4em;display:flex;align-items:center;justify-content:center;background:#fff;border-radius:12px;box-shadow:0 3px 0 #C9DCEC}
+.grid .cell.in{background:linear-gradient(180deg,#FFF0BE,#FFD98A)}
+.board{background:rgba(255,255,255,.9);border-radius:26px;padding:14px;box-shadow:var(--sh)}
+
+/* подвал игры */
+#gameFoot{display:flex;gap:12px;justify-content:center;margin-top:8px;padding-bottom:10px;flex-wrap:wrap}
+
+/* эффекты */
+#fx{position:fixed;inset:0;pointer-events:none;z-index:50}
+.spark{position:absolute;font-size:30px;animation:sparkFly 1s ease-out forwards}
+@keyframes sparkFly{0%{transform:translate(0,0) scale(.4);opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(1.4);opacity:0}}
+.toast{position:fixed;left:50%;top:22%;transform:translateX(-50%);z-index:60;font-size:clamp(24px,4.6vw,40px);font-weight:800;
+  padding:14px 30px;border-radius:26px;background:rgba(255,255,255,.96);box-shadow:var(--sh);animation:toastPop 1.4s forwards;pointer-events:none}
+@keyframes toastPop{0%{transform:translateX(-50%) scale(.5);opacity:0}18%{transform:translateX(-50%) scale(1.05);opacity:1}
+  75%{transform:translateX(-50%) scale(1);opacity:1}100%{transform:translateX(-50%) scale(.9);opacity:0}}
+#fw{position:fixed;inset:0;z-index:40;pointer-events:none;display:none}
+
+/* награда / альбом */
+.crystalBig{font-size:clamp(70px,14vw,120px);animation:spinIn 1.2s cubic-bezier(.2,1.5,.4,1)}
+@keyframes spinIn{0%{transform:scale(0) rotate(-180deg)}100%{transform:scale(1) rotate(0)}}
+.stickerCard{width:150px;padding:12px;background:#fff;border-radius:24px;text-align:center;box-shadow:var(--sh)}
+.stickerCard .se{font-size:58px}
+.stickerCard.locked{filter:grayscale(1);opacity:.45}
+#albumGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:16px;width:100%;max-width:900px}
+.teamRow{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.teamChip{width:74px;height:74px;border-radius:50%;background:#fff;font-size:38px;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 0 #C9DCEC;animation:pop .6s backwards}
+#menu{position:fixed;inset:0;z-index:70;background:rgba(51,70,92,.45);display:none;align-items:center;justify-content:center;padding:20px}
+#menu.active{display:flex}
+#menu .card{max-width:420px}
+.mrow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:2px dashed var(--line);font-size:19px;font-weight:700}
+.mrow:last-child{border:none}
+.toggle{width:72px;height:40px;border-radius:20px;border:none;background:#C9DCEC;position:relative;cursor:pointer;flex:0 0 72px}
+.toggle:after{content:'';position:absolute;top:4px;left:4px;width:32px;height:32px;border-radius:50%;background:#fff;transition:.25s}
+.toggle.on{background:var(--ok)}
+.toggle.on:after{left:36px}
+.stat{color:var(--ink2);font-size:16px;text-align:center;margin-top:8px}
+</style>
+<style id="style2">
+/* ---------- нарисованные персонажи ---------- */
+.host{padding:0;overflow:hidden}
+.host svg{width:100%;height:100%;display:block}
+.heroFace{display:block;height:82px}
+.heroFace svg{width:82px;height:82px;display:block;margin:0 auto}
+.teamChip{padding:0;overflow:hidden}
+.teamChip svg{width:100%;height:100%;display:block}
+.teamChip.small{width:48px;height:48px;flex:0 0 48px;box-shadow:0 3px 0 #C9DCEC}
+.badge{width:120px;height:120px;display:block;margin:0 auto}
+.wc{display:inline-block;width:66px;height:88px}
+.wc svg{width:100%;height:100%;overflow:visible}
+.walker{overflow:visible}
+.legA,.legB{transform-box:fill-box;transform-origin:50% 0}
+.walking .legA{animation:stepA .5s infinite ease-in-out}
+.walking .legB{animation:stepB .5s infinite ease-in-out}
+@keyframes stepA{0%,100%{transform:rotate(-18deg)}50%{transform:rotate(18deg)}}
+@keyframes stepB{0%,100%{transform:rotate(18deg)}50%{transform:rotate(-18deg)}}
+.prop{transform-box:fill-box;transform-origin:50% 50%;animation:spin 1.3s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ---------- карта ---------- */
+#mapWrap{width:100%;max-width:1000px;height:min(62vh,580px);min-height:320px;position:relative;margin:2px auto 0;flex:0 0 auto}
+#world{width:100%;height:100%;display:block;border-radius:30px;box-shadow:0 8px 0 rgba(0,0,0,.06)}
+#waves{animation:waveGlow 7s ease-in-out infinite alternate}
+@keyframes waveGlow{from{opacity:.35}to{opacity:.7}}
+.isle{position:static;width:auto;padding:0;border-radius:0;background:none;box-shadow:none;cursor:pointer}
+.isle.locked{opacity:.6}
+.islName{font-size:19px;font-weight:800;fill:#33465C;font-family:inherit}
+.islSub{font-size:14px;font-weight:700;fill:#6B7F94;font-family:inherit}
+.isle.locked .islName{fill:#8A97A6}
+.isle.done .islName{fill:#2E7D32}
+.isle.cur .isleBody{filter:drop-shadow(0 0 12px rgba(255,190,60,.95))}
+/* оживляем только внутреннюю группу: у .isle сам transform="translate()" — его нельзя перебивать,
+   иначе материк уезжает в левый верхний угол */
+.islInner{transform-box:fill-box;transform-origin:50% 50%;transition:transform .18s ease-out}
+.isle.cur .islInner{animation:breath 2.2s ease-in-out infinite}
+.isle:not(.locked):hover .islInner{transform:scale(1.04)}
+@keyframes breath{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
+.pulse{animation:pulseRing 1.9s ease-out infinite;transform-box:fill-box;transform-origin:50% 50%}
+@keyframes pulseRing{0%{transform:scale(1);opacity:.85}100%{transform:scale(1.14);opacity:0}}
+#guestG{opacity:0;transition:opacity .4s}
+#guestG.show{opacity:1}
+#mapBubble{position:absolute;z-index:9;min-width:170px;max-width:250px;background:#fff;border-radius:22px;
+  padding:12px 16px;box-shadow:0 6px 0 #C9DCEC,0 12px 24px rgba(51,70,92,.2);pointer-events:none;
+  opacity:0;transform:translateY(12px) scale(.9);transition:.3s cubic-bezier(.2,1.4,.5,1)}
+#mapBubble.show{opacity:1;transform:none}
+#mapBubble .gbName{display:block;font-weight:800;font-size:16px;color:#33465C}
+#mapBubble .gbText{display:block;font-size:15px;color:#5A6B7D;margin-top:2px;line-height:1.25}
+#mapBubble:after{content:'';position:absolute;left:26px;bottom:-11px;width:0;height:0;border:12px solid transparent;border-top-color:#fff;border-bottom:0}
+
+/* ---------- встреча внутри этапа ---------- */
+.guestBox{position:fixed;left:0;bottom:26px;z-index:55;display:flex;align-items:flex-end;gap:10px;
+  transform:translateX(-130%);transition:transform .55s cubic-bezier(.2,1.3,.4,1);pointer-events:none}
+.guestBox.show{transform:translateX(14px)}
+.gbFig{width:96px;height:126px}
+.gbFig svg{width:100%;height:100%;overflow:visible}
+.gbSay{background:#fff;border-radius:22px;padding:12px 18px;max-width:58vw;
+  box-shadow:0 6px 0 #C9DCEC,0 12px 24px rgba(51,70,92,.2)}
+.gbSay b{display:block;font-size:17px;color:#33465C}
+.gbSay span{display:block;font-size:15px;color:#5A6B7D;line-height:1.25}
+
+/* ---------- задания ---------- */
+.lbox{display:flex;flex-direction:column;align-items:center;gap:14px;width:100%}
+.wordName{font-size:clamp(22px,3.6vw,32px);font-weight:800;letter-spacing:2px;text-align:center}
+.sign{font-size:clamp(30px,5vw,46px);font-weight:800;color:#FF9E7A;margin:0 8px}
+.bossFig{width:150px;height:198px}
+.bossFig svg{width:100%;height:100%;overflow:visible}
+.bossName{font-size:clamp(22px,4vw,34px);font-weight:800;color:#B4532A;text-align:center}
+.bossSay{font-size:clamp(15px,2.4vw,20px);text-align:center;max-width:640px;color:#5A6B7D;margin:0}
+.crystalRow{font-size:44px;letter-spacing:6px}
+#scr-final .wordPic{font-size:clamp(60px,12vw,96px)}
+.crys.bonus{width:22px;clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);opacity:.28}
+.crys.bonus.on{opacity:1;filter:drop-shadow(0 0 8px rgba(255,190,60,.9))}
+.screen{padding-bottom:24px}
+@media (max-width:640px){
+  #mapWrap{height:min(52vh,420px)}
+  .islName{font-size:22px}
+  .islSub{font-size:16px}
+}
+/* ---- v3.0 мобильная вёрстка: ничего не должно уезжать за край экрана ---- */
+@media (max-width:520px){
+  /* плавающие буквы (слоги) — меньше и с меньшей амплитудой дрейфа */
+  .drift{height:180px}
+  .letterFloat{width:72px;height:72px;font-size:38px;border-radius:20px}
+  @keyframes swim{from{transform:translate(0,0) rotate(-4deg)}to{transform:translate(12px,-14px) rotate(5deg)}}
+  /* кнопки вариантов: гарантированно влезают по 3 в ряд */
+  .choices{gap:10px}
+  .opt{min-width:84px;min-height:76px;padding:8px 12px}
+  .opt.sm{min-width:70px;min-height:66px}
+  .opt.wide{min-width:132px}
+  .syllResult{font-size:clamp(38px,9vw,60px);min-height:64px;letter-spacing:3px}
+  .bigLetter{font-size:clamp(56px,17vw,110px);padding:6px 20px}
+  .slot{width:76px;height:72px;font-size:26px}
+  .objects{gap:6px}
+}
+/* узкие экраны: страховка от горизонтального переполнения */
+#taskArea,.lbox,.choices,.puddle,.objects,.drift,.slots,.pool{max-width:100%;box-sizing:border-box}
+.opt,.slot,.letterFloat{box-sizing:border-box}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="bg"></div>
+
+  <header id="topbar">
+    <button class="ico" id="btnMenu" title="Меню">☰</button>
+    <div id="progWrap"><div id="progFill"></div><span id="progText"></span></div>
+    <div id="crystals"></div>
+    <button class="ico" id="btnMusic" title="Музыка">🎵</button>
+    <button class="ico" id="btnVoice" title="Озвучка">🔊</button>
+    <button class="ico" id="btnAlbum" title="Альбом">🏅</button>
+  </header>
+
+  <main>
+    <!-- ТИТУЛ -->
+    <section id="scr-title" class="screen active">
+      <h1>🗺️ Карта Знаний</h1>
+      <p class="sub">В Стране Знаний что-то пошло не так: буквы рассыпались, цифры потерялись, примеры перестали сходиться. Леди Баг, Супер Кот, Руми и Человек-паук зовут друзей на помощь!<br>
+        Собери 6 волшебных кристаллов — и устроим большой салют!</p>
+      <div class="card" style="text-align:center">
+        <div style="font-size:64px;line-height:1.2">🌻💧🏡🔧🍫🚀</div>
+        <div id="titleStats" class="stat"></div>
+        <div class="btnRow">
+          <button class="btn primary" id="btnPlay">▶ Играть</button>
+          <button class="btn ghost" id="btnAlbum2">🏅 Альбом</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ВЫБОР ГЕРОЯ -->
+    <section id="scr-hero" class="screen">
+      <h1>Кто отправляется в поход?</h1>
+      <p class="sub">Выбери героя. По дороге к тебе присоединятся и другие!</p>
+      <div id="heroGrid"></div>
+      <div class="btnRow">
+        <button class="btn ok" id="btnStart">Вперёд! 🚀</button>
+        <button class="btn ghost" id="btnBack1">← Назад</button>
+      </div>
+    </section>
+
+    <!-- КАРТА -->
+    <section id="scr-map" class="screen">
+      <h1 style="font-size:clamp(24px,4.4vw,38px)">Карта Знаний</h1>
+      <div id="mapWrap"></div>
+      <p class="sub" id="mapHint"></p>
+      <div class="btnRow"><button class="btn ghost" id="btnResetTeam">👥 Моя команда</button></div>
+    </section>
+
+    <!-- ИГРА -->
+    <section id="scr-game" class="screen">
+      <div id="hostRow">
+        <div id="hostA" class="host"></div>
+        <div id="bubble" class="bubble"><span id="bubbleText"></span>
+          <button id="btnReplay" title="Повторить">🔊</button></div>
+        <div id="hostB" class="host small"></div>
+      </div>
+      <div id="taskArea"></div>
+      <div id="gameFoot">
+        <button class="btn ghost" id="btnHint">💡 Подсказка</button>
+        <button class="btn ghost" id="btnMap">🗺️ Карта</button>
+      </div>
+    </section>
+
+    <!-- НАГРАДА -->
+    <section id="scr-reward" class="screen">
+      <h1 id="rwTitle"></h1>
+      <div class="crystalBig">💎</div>
+      <h2 id="rwSub"></h2>
+      <div class="card" style="max-width:560px;text-align:center">
+        <div id="rwSticker"></div>
+        <div id="rwTeam"></div>
+      </div>
+      <div class="btnRow">
+        <button class="btn primary" id="btnNext">Дальше →</button>
+        <button class="btn ghost" id="btnMap2">🗺️ Карта</button>
+      </div>
+    </section>
+
+    <!-- ФИНАЛ -->
+    <section id="scr-final" class="screen">
+      <h1>🎭 Большой театр</h1>
+      <div id="finalBody" class="card" style="text-align:center"></div>
+      <div class="btnRow">
+        <button class="btn primary" id="btnFire">🎆 Запустить салют!</button>
+        <button class="btn ghost" id="btnMap3">🗺️ Карта</button>
+      </div>
+    </section>
+
+    <!-- АЛЬБОМ -->
+    <section id="scr-album" class="screen">
+      <h1>🏅 Мой альбом</h1>
+      <p class="sub">Наклейки дают за каждый пройденный материк.</p>
+      <div id="albumGrid"></div>
+      <div class="btnRow"><button class="btn primary" id="btnBackAlbum">← Назад</button></div>
+    </section>
+  </main>
+</div>
+
+<div id="menu">
+  <div class="card">
+    <h2 style="margin-top:0">Меню</h2>
+    <div class="mrow"><span>🎵 Музыка</span><button class="toggle on" id="tgMusic"></button></div>
+    <div class="mrow"><span>🔊 Озвучка</span><button class="toggle on" id="tgVoice"></button></div>
+    <div class="mrow"><span>✨ Звуки</span><button class="toggle on" id="tgSfx"></button></div>
+    <div class="btnRow">
+      <button class="btn ghost" id="btnCloseMenu">Закрыть</button>
+      <button class="btn" id="btnReset" style="color:#B04A2A">Сбросить прогресс</button>
+    </div>
+    <div class="stat" id="menuStats"></div>
+  </div>
+</div>
+
+<div id="fx"></div>
+<canvas id="fw"></canvas>
+
+<script>
+/* =========================================================
+   A1. МЕЛКИЕ УТИЛИТЫ
+   ========================================================= */
+const $ = s => document.querySelector(s);
+const $$ = s => Array.prototype.slice.call(document.querySelectorAll(s));
+const rnd = n => Math.floor(Math.random()*n);
+const pick = a => a[rnd(a.length)];
+function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=rnd(i+1); const t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+function uniqPick(arr,n){ return shuffle(arr).slice(0,n); }
+function el(tag,cls,txt){ const e=document.createElement(tag); if(cls)e.className=cls; if(txt!=null)e.textContent=txt; return e; }
+/* вставляет готовую строку с <svg>...</svg> в HTML-элемент, чтобы namespace сохранился */
+function elSVG(parent, svgStr){
+  const wrap=document.createElement('div');
+  wrap.innerHTML=svgStr;                 // SVG-парсер HTML-разметчика подхватит xmlns
+  while(wrap.firstChild) parent.appendChild(wrap.firstChild);
+  return parent;
+}
+function numWord(n,forms){ const a=Math.abs(n)%100, b=a%10; if(a>10&&a<20) return forms[2]; if(b>1&&b<5) return forms[1]; if(b===1) return forms[0]; return forms[2]; }
+
+/* =========================================================
+   A2. СОХРАНЕНИЕ (localStorage)
+   ========================================================= */
+const SAVE_KEY='znaniya_map_v1';
+const defSave = () => ({hero:null,team:[],stage:1,crystals:[],stickers:[],solved:0,mistakes:0,plan:{},prog:{},
+                        settings:{music:true,voice:true,sfx:true},finished:false});
+function loadSave(){ try{ const r=JSON.parse(localStorage.getItem(SAVE_KEY)); return r?Object.assign(defSave(),r):defSave(); }catch(e){ return defSave(); } }
+let S = loadSave();
+function save(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify(S)); }catch(e){} }
+
+/* =========================================================
+   A3. ЗВУК: Web Audio API (музыка + эффекты)
+   ========================================================= */
+const A = {
+  ctx:null, master:null, mus:null, sfxg:null, filt:null,
+  playing:false, timer:null, step:0, nextTime:0,
+  BPM:84, PROG:[[48,55,60],[45,52,57],[41,48,53],[43,50,55]],
+  MEL:[60,62,64,67,69,72,74,76], pattern:[], melIdx:3,
+
+  ensure(){
+    if(this.ctx) return true;
+    const AC = window.AudioContext||window.webkitAudioContext;
+    if(!AC) return false;
+    this.ctx = new AC();
+    this.master = this.ctx.createGain(); this.master.gain.value = 0.85;
+    this.master.connect(this.ctx.destination);
+    this.mus = this.ctx.createGain(); this.mus.gain.value = 0;
+    this.filt = this.ctx.createBiquadFilter(); this.filt.type='lowpass'; this.filt.frequency.value=2600;
+    this.mus.connect(this.filt); this.filt.connect(this.master);
+    this.sfxg = this.ctx.createGain(); this.sfxg.gain.value = 0.9; this.sfxg.connect(this.master);
+    return true;
+  },
+  mtof(m){ return 440*Math.pow(2,(m-69)/12); },
+
+  /* --- одна нота --- */
+  tone(freq,t,dur,type,vol,dest,slideTo){
+    if(!this.ctx) return;
+    const o=this.ctx.createOscillator(), g=this.ctx.createGain();
+    o.type=type||'sine'; o.frequency.setValueAtTime(freq,t);
+    if(slideTo) o.frequency.exponentialRampToValueAtTime(Math.max(30,slideTo), t+dur);
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(vol||0.15, t+Math.min(0.04,dur*0.3));
+    g.gain.exponentialRampToValueAtTime(0.0001, t+dur);
+    o.connect(g); g.connect(dest||this.sfxg); o.start(t); o.stop(t+dur+0.05);
+  },
+
+  /* --- фоновая музыка: 4 такта, лёгкий чилл --- */
+  genPattern(){
+    const p=[]; let i=this.melIdx;
+    for(let s=0;s<32;s++){
+      if(Math.random()<0.34) { p.push(0); continue; }
+      i += (rnd(3)-1);
+      if(i<0) i=1; if(i>this.MEL.length-1) i=this.MEL.length-2;
+      p.push(this.MEL[i]);
+    }
+    this.melIdx=i; this.pattern=p;
+  },
+  startMusic(){
+    if(!this.ensure()||!S.settings.music) return;
+    if(this.ctx.state==='suspended') this.ctx.resume();
+    if(this.playing) return;
+    this.playing=true; this.step=0; this.nextTime=this.ctx.currentTime+0.15;
+    this.mus.gain.cancelScheduledValues(this.ctx.currentTime);
+    this.mus.gain.setValueAtTime(this.mus.gain.value,this.ctx.currentTime);
+    this.mus.gain.linearRampToValueAtTime(0.16,this.ctx.currentTime+2.5);
+    this.timer=setInterval(()=>this.sched(),90);
+  },
+  stopMusic(){
+    if(!this.ctx) return;
+    this.playing=false; clearInterval(this.timer); this.timer=null;
+    this.mus.gain.cancelScheduledValues(this.ctx.currentTime);
+    this.mus.gain.setValueAtTime(this.mus.gain.value,this.ctx.currentTime);
+    this.mus.gain.linearRampToValueAtTime(0,this.ctx.currentTime+0.6);
+  },
+  sched(){
+    if(!this.playing) return;
+    const dur = 60/this.BPM/2;                       // восьмая
+    while(this.nextTime < this.ctx.currentTime + 0.45){
+      this.playStep(this.step, this.nextTime, dur);
+      this.nextTime += dur;
+      this.step = (this.step+1) % 32;
+      if(this.step===0) this.genPattern();
+    }
+  },
+  playStep(s,t,dur){
+    if(s===0) this.genPattern();
+    const bar = Math.floor(s/8);
+    if(s%8===0){                                     // аккорд-пэд + бас
+      const ch=this.PROG[bar];
+      ch.forEach(m=>this.tone(this.mtof(m+12),t,dur*8,'sine',0.035,this.mus));
+      this.tone(this.mtof(ch[0]-12),t,dur*4,'triangle',0.09,this.mus);
+    }
+    if(s%8===4) this.tone(this.mtof(this.PROG[bar][0]-12),t,dur*3,'triangle',0.055,this.mus);
+    const n=this.pattern[s];
+    if(n){
+      this.tone(this.mtof(n),t,dur*1.7,'triangle',0.075,this.mus);
+      this.tone(this.mtof(n+12),t+0.03,dur*1.1,'sine',0.022,this.mus);
+    }
+    if(s%4===2) this.tone(this.mtof(this.PROG[bar][1]+12),t,dur*0.7,'sine',0.03,this.mus);
+  },
+
+  /* --- звуковые эффекты --- */
+  sfx(kind){
+    if(!this.ensure()||!S.settings.sfx) return;
+    const t=this.ctx.currentTime+0.01;
+    if(kind==='click'){ this.tone(680,t,0.07,'triangle',0.13); }
+    else if(kind==='correct'){ [72,76,79,84].forEach((m,i)=>this.tone(this.mtof(m),t+i*0.07,0.28,'triangle',0.16)); }
+    else if(kind==='wrong'){ this.tone(300,t,0.34,'sine',0.16,null,110); this.tone(150,t+0.02,0.3,'triangle',0.07,null,70); }
+    else if(kind==='crystal'){ [84,88,91,96].forEach((m,i)=>this.tone(this.mtof(m),t+i*0.09,0.9,'triangle',0.15));
+                               this.tone(this.mtof(96),t+0.4,1.2,'sine',0.09); }
+    else if(kind==='win'){ [67,72,76,79,84].forEach((m,i)=>this.tone(this.mtof(m),t+i*0.13,0.5,'triangle',0.17)); }
+    else if(kind==='pop'){ this.tone(520,t,0.09,'sine',0.12,null,880); }
+  }
+};
+
+/* =========================================================
+   A4. РЕЧЬ (SpeechSynthesis)
+   ========================================================= */
+const TTS = {
+  voice:null,
+  init(){
+    if(!('speechSynthesis' in window)) return;
+    const set = ()=>{
+      const vs = speechSynthesis.getVoices()||[];
+      this.voice = vs.find(v=>/^ru(-|_)?RU/i.test(v.lang)) || vs.find(v=>/Russian|Milena|Yuri/i.test(v.name)) || null;
+    };
+    set(); speechSynthesis.onvoiceschanged = set;
+  },
+  say(text, rate, pitch, onend){
+    if(!S.settings.voice || !('speechSynthesis' in window) || !text){ if(onend) try{onend();}catch(e){} return; }
+    try{
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(String(text));
+      u.lang='ru-RU'; if(this.voice) u.voice=this.voice;
+      u.rate = rate||1.0; u.pitch = pitch||1.1; u.volume=0.98;
+      if(onend){ u.onend=onend; u.onerror=onend; }
+      speechSynthesis.speak(u);
+    }catch(e){ if(onend) try{onend();}catch(e2){} }
+  },
+  stop(){ try{ if('speechSynthesis' in window) speechSynthesis.cancel(); }catch(e){} }
+};
+
+/* =========================================================
+   A5. ПЕРСОНАЖИ
+   ========================================================= */
+const CHARS = {
+  masha:{n:'Маша',r:1.15,p:1.35,hi:['Привет! Я Маша! Давай учиться!','Ого, сколько всего интересного!','Я уже всё умею, а ты?'],
+    art:{t:'kid',c:'#FFDCC0',c2:'#E0A97A',h:'#E8B24A',ac:'bow',e:'big',m:'grin',cloth:'#F58FAE',legs:'#C9557A'}},
+  medved:{n:'Медведь',r:0.85,p:0.80,hi:['Здравствуй! Я Миша-Медведь.','Ну-ка, покажи, что умеешь!','Спокойно, тут ничего страшного.'],
+    art:{t:'bear',c:'#C98B54',c2:'#A96C3C',nose:'button',e:'dot',m:'smile',cloth:'#C98B54',legs:'#A96C3C'}},
+  fyodor:{n:'Дядя Фёдор',r:1.0,p:1.15,hi:['Привет! Я дядя Фёдор.','Давай вместе разберёмся!','Интересно, а ты справишься?'],
+    art:{t:'kid',c:'#FFDCC0',c2:'#E0A97A',h:'#C88B4A',ac:'ushanka',e:'dot',m:'smile',cloth:'#7FB3D9',legs:'#4A5A6A'}},
+  matroskin:{n:'Кот Матроскин',r:0.95,p:1.10,hi:['Мяу! Я кот Матроскин.','Хозяйство любит счёт!','Ну-ка, посчитаем?'],
+    art:{t:'cat',c:'#E8A85C',c2:'#C9893F',nose:'dot',ac:'whiskers',e:'dot',m:'smile',cloth:'#9BD3A0',legs:'#C9893F'}},
+  sharik:{n:'Пёс Шарик',r:1.05,p:1.0,hi:['Гав! Я Шарик!','Давай, у тебя получится!','Я всё сфотографирую!'],
+    art:{t:'dog',c:'#D9B382',c2:'#B98F5F',nose:'button',e:'big',m:'grin',cloth:'#C6B6E8',legs:'#B98F5F'}},
+  pechkin:{n:'Почтальон Печкин',r:0.90,p:0.90,hi:['Я Печкин. Посылку выдам только за задание!','Документик покажи! Шучу, считай.','Без правильного ответа ничего не отдам.'],
+    art:{t:'man',c:'#FFDCC0',c2:'#D8A98A',h:'#C9C4BC',ac:'cap',beard:1,e:'glasses',m:'flat',cloth:'#6FA8A0',legs:'#4A5A6A'}},
+  luntik:{n:'Лунтик',r:1.10,p:1.40,hi:['Привет! Я Лунтик!','Давай играть, это так весело!','Я с луны, там тоже считают!'],
+    art:{t:'luntik',c:'#B9A6F0',c2:'#DED4FF',e:'big',m:'smile',cloth:'#B9A6F0',legs:'#8E78D8'}},
+  kuzya:{n:'Кузя',r:1.15,p:1.45,hi:['Я Кузя-кузнечик!','Прыгай вместе со мной!','Скок-скок, и буква готова!'],
+    art:{t:'bug',c:'#8FD86A',c2:'#6BB84A',ac:'antenna',e:'big',m:'grin',cloth:'#8FD86A',legs:'#5E9E3E'}},
+  pupsen:{n:'Пупсень',r:0.95,p:1.05,hi:['А я Пупсень!','Мы тут всё запутали, извини!','Попробуй собрать, если сможешь!'],
+    art:{t:'caterpillar',c:'#F2C14E',c2:'#D8A02E',ac:'antenna',e:'dot',m:'grin',cloth:'#F2C14E',legs:'#B8862E'}},
+  simka:{n:'Симка',r:1.10,p:1.35,hi:['Привет! Я Симка-фиксик!','Фиксики знают, как всё устроено!','Чинить числа — моя работа!'],
+    art:{t:'robot',c:'#F5A0B8',c2:'#D97A94',ac:'antenna',e:'goggles',m:'smile',cloth:'#F5A0B8',legs:'#B85C78'}},
+  nolik:{n:'Нолик',r:1.12,p:1.42,hi:['Я Нолик! Люблю цифры!','Ноль — тоже число, между прочим!','Давай посчитаем по-фиксиковски!'],
+    art:{t:'robot',c:'#8FC7EE',c2:'#5FA3D0',ac:'antenna',e:'goggles',m:'grin',cloth:'#8FC7EE',legs:'#4A86B8'}},
+  papus:{n:'Папус',r:0.85,p:0.85,hi:['Я Папус, главный фиксик.','Без порядка техника не работает.','Проверим твои знания.'],
+    art:{t:'robot',c:'#C9CFD8',c2:'#98A2AE',ac:'antenna',beard:1,e:'goggles',m:'flat',cloth:'#C9CFD8',legs:'#7A848F'}},
+  masya:{n:'Мася',r:1.05,p:1.30,hi:['Я Мася!','Всё будет чики-чики!','Давай быстрее, не терпится!'],
+    art:{t:'robot',c:'#FFD86A',c2:'#E0B02E',ac:'antenna',e:'goggles',m:'grin',cloth:'#FFD86A',legs:'#C9922E'}},
+  kolobok:{n:'Колобок',r:1.10,p:1.25,hi:['Я Колобок, я от бабушки ушёл!','Покатились учиться!','Я круглый, как буква О!'],
+    art:{t:'bread',c:'#F2C572',c2:'#D8A44E',e:'dot',m:'smile',cloth:'#F2C572',legs:'#C9922E'}},
+  zayac:{n:'Заяц',r:1.15,p:1.40,hi:['Я Зайка! Считать умею быстро!','Прыг-скок, и пример готов!','Не бойся, я помогу!'],
+    art:{t:'bunny',c:'#EFE7DC',c2:'#D8CFC2',nose:'dot',e:'big',m:'smile',cloth:'#EFE7DC',legs:'#C9C0B2'}},
+  volk:{n:'Волк',r:0.90,p:0.85,hi:['Ну что, посчитаем?','Я тоже учился в лесной школе.','Только не торопись.'],
+    art:{t:'wolf',c:'#98A5B8',c2:'#76839A',nose:'snout',e:'dot',m:'grin',cloth:'#98A5B8',legs:'#6E7C92'}},
+  lisa:{n:'Лиса Патрикеевна',r:1.0,p:1.20,hi:['Я Лиса, я спрятала все буквы!','Найдёшь — отдам!','Хитрая загадка, правда?'],
+    art:{t:'fox',c:'#F09A4B',c2:'#C9732E',nose:'snout',e:'dot',m:'smile',cloth:'#F09A4B',legs:'#C9732E'}},
+  vinni:{n:'Винни-Пух',r:0.85,p:0.95,hi:['Я Винни-Пух, люблю мёд и горшочки!','Считать горшочки — моё любимое!','Ой, кажется, я всё перепутал!'],
+    art:{t:'bear',c:'#E8A94B',c2:'#C98B32',nose:'button',e:'dot',m:'smile',cloth:'#E8A94B',legs:'#C98B32'}},
+  pyatachok:{n:'Пятачок',r:1.15,p:1.40,hi:['Я Пятачок!','Ой-ой, давай вместе!','Я очень стараюсь!'],
+    art:{t:'pig',c:'#F5B8C0',c2:'#E8899B',nose:'pigs',e:'big',m:'smile',cloth:'#8FC7EE',legs:'#C46C7E'}},
+  ia:{n:'Ослик Иа',r:0.80,p:0.85,hi:['Я Иа. Всё равно ничего не получится…','Ну давай, попробуем.','Хотя бы попытайся.'],
+    art:{t:'donkey',c:'#A8B0BF',c2:'#868F9F',nose:'snout',e:'sleepy',m:'flat',cloth:'#A8B0BF',legs:'#7A828F'}},
+  sova:{n:'Мудрая Сова',r:0.90,p:1.0,hi:['Я Мудрая Сова.','Загадка требует смекалки.','Подумай хорошенько, дружок.'],
+    art:{t:'bird',c:'#B79A72',c2:'#E8DCC4',nose:'beak',e:'wide',m:'beak',cloth:'#B79A72',legs:'#E8A93B'}},
+  neznayka:{n:'Незнайка',r:1.15,p:1.35,hi:['Я Незнайка! А ты знаешь?','Я ничего не знаю, но очень стараюсь!','Ого, ты справишься лучше меня!'],
+    art:{t:'kid',c:'#FFDCC0',c2:'#E0A97A',h:'#E8C24A',ac:'hat',e:'dot',m:'grin',cloth:'#F2C14E',legs:'#5A6A9A'}},
+  znayka:{n:'Знайка',r:0.95,p:1.05,hi:['Я Знайка. Полёт требует точного счёта!','Проверим готовность к старту.','Таблица умножения — пустяк для тебя!'],
+    art:{t:'kid',c:'#FFDCC0',c2:'#E0A97A',h:'#8B6B3A',ac:'cap',e:'glasses',m:'smile',cloth:'#7FB3D9',legs:'#3A4A6A'}},
+  sineglazka:{n:'Синеглазка',r:1.05,p:1.30,hi:['Я Синеглазка, я люблю цветы и буквы!','Давай учиться красиво!','У тебя всё получится!'],
+    art:{t:'kid',c:'#FFDCC0',c2:'#E0A97A',h:'#7FC7E8',ac:'bow',e:'big',m:'smile',cloth:'#F5A0B8',legs:'#C9557A'}},
+  vintik:{n:'Винтик',r:1.0,p:1.10,hi:['Я Винтик! Люблю собирать.','Собирай по порядку!','Закрутим этот пример!'],
+    art:{t:'kid',c:'#FFDCC0',c2:'#E0A97A',h:'#C9A24A',ac:'cap',e:'dot',m:'smile',cloth:'#6FA8A0',legs:'#4A5A6A'}},
+  shpuntik:{n:'Шпунтик',r:1.05,p:1.15,hi:['А я Шпунтик!','Винтик — мой лучший друг!','Соберём слово вместе!'],
+    art:{t:'kid',c:'#FFDCC0',c2:'#E0A97A',h:'#A87B4A',ac:'cap',e:'dot',m:'grin',cloth:'#E8895F',legs:'#4A5A6A'}},
+  buratino:{n:'Буратино',r:1.10,p:1.35,hi:['Привет! Я Буратино!','Мой ключик откроет любую дверь!','Давай найдём правильный ответ!'],
+    art:{t:'kid',c:'#E8C89A',c2:'#C9A072',h:'#8B5E3C',ac:'cap',nose:'long',e:'big',m:'grin',cloth:'#F2C14E',legs:'#5A4636'}},
+  piero:{n:'Пьеро',r:0.95,p:1.0,hi:['Я Пьеро, грустный поэт…','Но с тобой мне веселее.','Прочитаем эту букву вместе.'],
+    art:{t:'kid',c:'#FFF3E0',c2:'#E8D8C0',h:'#E8E0D0',ac:'bonnet',e:'sleepy',m:'flat',cloth:'#E8E0D0',legs:'#8A7A6A'}},
+  artemon:{n:'Артемон',r:1.05,p:1.20,hi:['Гав! Я Артемон!','Я охраняю правильные ответы!','Смелее, вперёд!'],
+    art:{t:'dog',c:'#F3E2C7',c2:'#D8C0A0',nose:'button',ac:'curly',e:'big',m:'grin',cloth:'#F3E2C7',legs:'#D8C0A0'}},
+  gena:{n:'Крокодил Гена',r:0.85,p:0.90,hi:['Я Гена, крокодил. Работаю в зоопарке.','Посчитаем вместе?','Точь-в-точь как надо!'],
+    art:{t:'croc',c:'#6FB86F',c2:'#4E9A4E',nose:'dot',ac:'hat',e:'dot',m:'grin',cloth:'#3A6FA8',legs:'#4E9A4E'}},
+  cheburashka:{n:'Чебурашка',r:1.10,p:1.35,hi:['Я Чебурашка!','Давай дружить и учиться!','У меня уши большие — я всё слышу!'],
+    art:{t:'round',c:'#8B5E3C',c2:'#C99560',nose:'button',e:'big',m:'smile',cloth:'#8B5E3C',legs:'#6E4830'}},
+  karlson:{n:'Карлсон',r:1.0,p:1.10,hi:['Я Карлсон, лучший в мире шалун!','Сосчитай-ка цифры!','Спокойствие, только спокойствие!'],
+    art:{t:'man',c:'#FFDCC0',c2:'#E0A97A',h:'#E8C070',ac:'propeller',e:'dot',m:'grin',cloth:'#F2C14E',legs:'#5A4636'}},
+  malysh:{n:'Малыш',r:1.10,p:1.35,hi:['Я Малыш! Карлсон мой друг.','Давай учить буквы!','Мне очень нравится играть!'],
+    art:{t:'kid',c:'#FFDCC0',c2:'#E0A97A',h:'#C8A062',e:'big',m:'smile',cloth:'#8FC7EE',legs:'#4A5A6A'}},
+  frekenbok:{n:'Фрекен Бок',r:0.90,p:1.0,hi:['Я Фрекен Бок. Люблю порядок!','Числа должны стоять по порядку!','Без порядка никуда!'],
+    art:{t:'woman',c:'#FFDCC0',c2:'#E0A97A',h:'#8B6B5A',ac:'bun',e:'dot',m:'flat',cloth:'#B98FC7',legs:'#5A4A6A'}},
+  shapoklyak:{n:'Старуха Шапокляк',r:0.90,p:0.85,hi:['Хи-хи! Я Шапокляк, я всё перепутала!','Примеры не сходятся — и пусть!','Отгадаешь — отдам кристалл!'],
+    art:{t:'woman',c:'#FFDCC0',c2:'#E0A97A',h:'#C9C4BC',ac:'bonnet',e:'dot',m:'flat',cloth:'#7A6B8A',legs:'#4A3A5A'}},
+  ladybug:{n:'Леди Баг',r:1.10,p:1.40,hi:['Я Леди Баг! Справедливость победит!','Вместе мы всё решим!','Ты настоящий герой знаний!'],
+    art:{t:'kid',c:'#FFDCC0',c2:'#E0A97A',h:'#E8392F',ac:'ladybug',e:'big',m:'smile',cloth:'#E8392F',legs:'#7A1410'}},
+  supercat:{n:'Супер Кот',r:1.05,p:1.30,hi:['Я Супер Кот! Буду рядом!','Мяу-миссия выполнима!','Ты справишься, я верю!'],
+    art:{t:'cat',c:'#3A7BD5',c2:'#2A5BA8',h:'#3A7BD5',ac:'mask',e:'big',m:'grin',cloth:'#3A7BD5',legs:'#2A5BA8'}},
+  rumi:{n:'Руми',r:1.05,p:1.30,hi:['Я Руми! Давай петь и учиться!','Музыка поможет запомнить!','Ты просто сияешь отлично!'],
+    art:{t:'kid',c:'#FFE0C0',c2:'#E8B89A',h:'#F5B042',ac:'hair',e:'big',m:'smile',cloth:'#FF6FB5',legs:'#C9557A'}},
+  spiderman:{n:'Человек-паук',r:1.0,p:1.20,hi:['Я Человек-паук! Знания — это сила!','Сосчитаем, как паутину плетём!','Ты большой молодец!'],
+    art:{t:'man',c:'#C0392B',c2:'#7B241C',h:'#C0392B',ac:'mask',e:'big',m:'grin',cloth:'#C0392B',legs:'#7B241C'}},
+
+  /* --- v3.0 новые герои --- */
+  elsa:{n:'Эльза',r:0.95,p:1.25,hi:['Я Эльза, королева снегов!','Холодный расчёт — точный расчёт!','Отпусти и считай спокойно!'],
+    art:{t:'woman',c:'#FFE8DC',c2:'#E8C4B0',h:'#F2E3C8',ac:'elsa',e:'big',m:'smile',cloth:'#7FC7F0',legs:'#4E9AC8'}},
+  anna:{n:'Анна',r:1.05,p:1.35,hi:['Я Анна! Я никого не брошу!','Давай решать вместе!','Ты справишься, я знаю!'],
+    art:{t:'woman',c:'#FFE0C8',c2:'#E8B898',h:'#C96B3A',ac:'anna',e:'big',m:'grin',cloth:'#8B4FA8',legs:'#3A6E8B'}},
+  shrek:{n:'Шрэк',r:0.80,p:0.80,hi:['Я Шрэк. Считать умею, между прочим!','У нас в болоте свои порядки.','Ну-ка, покажи, на что способен!'],
+    art:{t:'ogre',c:'#8FBF5E',c2:'#6E9E42',ac:'shrek',e:'dot',m:'flat',cloth:'#C9B89A',legs:'#8A7A5E'}},
+  volkNP:{n:'Волк (Ну, погоди!)',r:0.85,p:0.90,hi:['Ну, погоди! Сейчас я всё посчитаю!','Я из лесной школы, между прочим!','Ну заяц, погоди!'],
+    art:{t:'wolf',c:'#7A8798',c2:'#5A6675',nose:'snout',ac:'npvolk',e:'dot',m:'grin',cloth:'#7A8798',legs:'#5A6675'}},
+  zayacNP:{n:'Заяц (Ну, погоди!)',r:1.15,p:1.45,hi:['Ну, погоди! Я быстро считаю!','Прыг-скок — и пример готов!','Не догонишь!'],
+    art:{t:'bunny',c:'#F5F0E8',c2:'#DCD5C8',nose:'dot',ac:'npzayac',e:'big',m:'smile',cloth:'#F5F0E8',legs:'#C9C0B2'}},
+  krosh:{n:'Крош',r:1.15,p:1.45,hi:['Я Крош! Йо-хо-хо!','Давай прыгать и считать!','Кро-о-ош, вперёд!'],
+    art:{t:'smesh',c:'#7FB8F0',c2:'#5A96D8',nose:'dot',ac:'krosh',e:'big',m:'grin',cloth:'#7FB8F0',legs:'#5A96D8'}},
+  ezhik:{n:'Ёжик',r:1.0,p:1.20,hi:['Я Ёжик. Я люблю порядок.','Давай разберёмся потихоньку.','У меня на иголках всё записано!'],
+    art:{t:'smesh',c:'#B98FD8',c2:'#8E68AE',nose:'dot',ac:'ezhik',e:'glasses',m:'smile',cloth:'#B98FD8',legs:'#8E68AE'}},
+  nyusha:{n:'Нюша',r:1.10,p:1.40,hi:['Я Нюша! Я самая красивая!','Давай учиться красиво!','Ой, какой хороший ответ!'],
+    art:{t:'smesh',c:'#F5A8C0',c2:'#DE7E9E',nose:'pigs',ac:'nyusha',e:'big',m:'smile',cloth:'#F5A8C0',legs:'#DE7E9E'}},
+  moana:{n:'Моана',r:1.0,p:1.25,hi:['Я Моана! Море зовёт меня!','Плыви туда, где трудно!','Считай, как волну ловишь!'],
+    art:{t:'woman',c:'#D9A06A',c2:'#B87E4A',h:'#3A2A20',ac:'moana',e:'big',m:'smile',cloth:'#E86A4A',legs:'#C94F32'}},
+  simba:{n:'Симба (Король Лев)',r:0.95,p:1.10,hi:['Я Симба, я король!','Хакуна матата — учись без забот!','Ряв! Считаем вместе!'],
+    art:{t:'lion',c:'#F2B85C',c2:'#D89A32',ac:'simba',nose:'snout',e:'big',m:'grin',cloth:'#F2B85C',legs:'#D89A32'}},
+  rapunzel:{n:'Рапунцель',r:1.05,p:1.35,hi:['У меня самые длинные волосы!','Я зажгу фонари и посчитаю!','Свет всегда побеждает!'],
+    art:{t:'woman',c:'#FFE8D0',c2:'#E8C4A8',h:'#F5D14A',ac:'rapunzel',e:'big',m:'smile',cloth:'#B87FC7',legs:'#8A5A9E'}}
+};
+
+/* =========================================================
+   ХУДОЖНИК: рисуем персонажей кодом (SVG, без картинок)
+   ========================================================= */
+const INK='#3A4A5A';
+function mix(hex,f){
+  const n=parseInt(hex.slice(1),16);
+  const r=Math.max(0,Math.min(255,Math.round(((n>>16)&255)*f)));
+  const g=Math.max(0,Math.min(255,Math.round(((n>>8)&255)*f)));
+  const b=Math.max(0,Math.min(255,Math.round((n&255)*f)));
+  return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
+}
+function earArt(t,c,c2,ac){
+  /* Смешарики: форма ушей/иголок зависит от персонажа */
+  if(t==='smesh'){
+    if(ac==='krosh')  return '<ellipse cx="32" cy="2" rx="7.5" ry="26" fill="'+c+'"/><ellipse cx="68" cy="2" rx="7.5" ry="26" fill="'+c+'"/>'
+      + '<ellipse cx="32" cy="4" rx="3.6" ry="17" fill="'+mix(c,1.35)+'"/><ellipse cx="68" cy="4" rx="3.6" ry="17" fill="'+mix(c,1.35)+'"/>';
+    if(ac==='nyusha') return '<path d="M26 26 L17 6 L44 17 Z" fill="'+c+'"/><path d="M74 26 L83 6 L56 17 Z" fill="'+c+'"/>'
+      + '<path d="M28 24 L22 12 L38 18 Z" fill="'+mix(c,0.82)+'"/><path d="M72 24 L78 12 L62 18 Z" fill="'+mix(c,0.82)+'"/>';
+    if(ac==='ezhik'){
+      let sp='<g fill="'+c2+'">';
+      for(let i=0;i<14;i++){
+        const a=(i/14)*Math.PI*2, x=50+Math.cos(a)*33, y=45+Math.sin(a)*33;
+        sp+='<path d="M'+x.toFixed(1)+' '+y.toFixed(1)+' L'+(50+Math.cos(a-0.13)*46).toFixed(1)+' '+(45+Math.sin(a-0.13)*46).toFixed(1)+' L'+(50+Math.cos(a+0.13)*46).toFixed(1)+' '+(45+Math.sin(a+0.13)*46).toFixed(1)+' Z"/>';
+      }
+      return sp+'</g>';
+    }
+    return '';
+  }
+  if(t==='lion') return '<circle cx="50" cy="42" r="43" fill="'+(ac==='simba'?'#C9862A':'#D89A32')+'"/>'
+    + '<circle cx="22" cy="26" r="12" fill="'+c+'"/><circle cx="78" cy="26" r="12" fill="'+c+'"/>'
+    + '<circle cx="22" cy="26" r="6" fill="'+c2+'"/><circle cx="78" cy="26" r="6" fill="'+c2+'"/>';
+  if(t==='ogre') return '<path d="M18 36 q-10 -4 -12 -14 q10 -2 16 8z" fill="'+c2+'"/><path d="M82 36 q10 -4 12 -14 q-10 -2 -16 8z" fill="'+c2+'"/>';
+  switch(t){
+    case 'bear': return '<circle cx="24" cy="22" r="12" fill="'+c+'"/><circle cx="76" cy="22" r="12" fill="'+c+'"/><circle cx="24" cy="22" r="6" fill="'+c2+'"/><circle cx="76" cy="22" r="6" fill="'+c2+'"/>';
+    case 'cat': return '<path d="M22 30 L19 7 L40 20 Z" fill="'+c+'"/><path d="M78 30 L81 7 L60 20 Z" fill="'+c+'"/><path d="M25 26 L23 13 L35 20 Z" fill="#F5B8C0"/><path d="M75 26 L77 13 L65 20 Z" fill="#F5B8C0"/>';
+    case 'dog': return '<ellipse cx="19" cy="42" rx="10" ry="21" fill="'+c2+'"/><ellipse cx="81" cy="42" rx="10" ry="21" fill="'+c2+'"/>';
+    case 'donkey': return '<ellipse cx="17" cy="32" rx="8" ry="23" fill="'+c+'"/><ellipse cx="83" cy="32" rx="8" ry="23" fill="'+c+'"/><ellipse cx="17" cy="32" rx="4" ry="15" fill="'+c2+'"/><ellipse cx="83" cy="32" rx="4" ry="15" fill="'+c2+'"/>';
+    case 'bunny': return '<ellipse cx="33" cy="8" rx="8" ry="23" fill="'+c+'"/><ellipse cx="67" cy="8" rx="8" ry="23" fill="'+c+'"/><ellipse cx="33" cy="10" rx="4" ry="15" fill="#FFC9D6"/><ellipse cx="67" cy="10" rx="4" ry="15" fill="#FFC9D6"/>';
+    case 'fox': case 'wolf': return '<path d="M20 34 L15 2 L45 20 Z" fill="'+c+'"/><path d="M80 34 L85 2 L55 20 Z" fill="'+c+'"/><path d="M23 30 L21 11 L37 21 Z" fill="'+c2+'"/><path d="M77 30 L79 11 L63 21 Z" fill="'+c2+'"/>';
+    case 'pig': return '<path d="M27 27 L20 8 L42 18 Z" fill="'+c+'"/><path d="M73 27 L80 8 L58 18 Z" fill="'+c+'"/>';
+    case 'round': return '<circle cx="17" cy="38" r="19" fill="'+c+'"/><circle cx="83" cy="38" r="19" fill="'+c+'"/><circle cx="17" cy="38" r="11" fill="'+c2+'"/><circle cx="83" cy="38" r="11" fill="'+c2+'"/>';
+    case 'luntik': return '<ellipse cx="15" cy="30" rx="12" ry="23" fill="'+c+'"/><ellipse cx="85" cy="30" rx="12" ry="23" fill="'+c+'"/><ellipse cx="15" cy="30" rx="6" ry="14" fill="'+c2+'"/><ellipse cx="85" cy="30" rx="6" ry="14" fill="'+c2+'"/>';
+    case 'bird': return '<path d="M26 28 L18 2 L42 14 Z" fill="'+c2+'"/><path d="M74 28 L82 2 L58 14 Z" fill="'+c2+'"/>';
+    case 'antenna': return '<line x1="34" y1="20" x2="26" y2="1" stroke="#9AA7B8" stroke-width="3"/><line x1="66" y1="20" x2="74" y2="1" stroke="#9AA7B8" stroke-width="3"/><circle cx="26" cy="2" r="5" fill="#FF8FA3"/><circle cx="74" cy="2" r="5" fill="#FF8FA3"/>';
+    default: return '';
+  }
+}
+function headArt(t,c,c2){
+  if(t==='robot') return '<rect x="21" y="13" width="58" height="54" rx="17" fill="'+c+'" stroke="'+c2+'" stroke-width="3"/><rect x="29" y="20" width="42" height="18" rx="9" fill="'+mix(c2,1.25)+'"/>';
+  if(t==='croc') return '<ellipse cx="50" cy="40" rx="33" ry="25" fill="'+c+'"/><path d="M24 50 q4 16 26 16 q22 0 26 -16 q-4 8 -26 8 q-22 0 -26 -8z" fill="'+mix(c,0.9)+'"/>';
+  if(t==='caterpillar') return '<circle cx="24" cy="64" r="15" fill="'+c2+'"/><circle cx="50" cy="60" r="16" fill="'+c2+'"/><circle cx="76" cy="64" r="15" fill="'+c2+'"/><circle cx="50" cy="40" r="27" fill="'+c+'"/>';
+  if(t==='bread') return '<circle cx="50" cy="44" r="30" fill="'+c+'"/><path d="M28 34 q10 -8 22 -6" stroke="'+c2+'" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M62 32 q10 2 14 10" stroke="'+c2+'" stroke-width="3" fill="none" stroke-linecap="round"/>';
+  if(t==='bird') return '<circle cx="50" cy="42" r="29" fill="'+c+'"/><ellipse cx="50" cy="54" rx="23" ry="17" fill="'+c2+'"/>';
+  if(t==='smesh') return '<circle cx="50" cy="45" r="34" fill="'+c+'"/>';
+  if(t==='ogre')  return '<ellipse cx="50" cy="44" rx="31" ry="28" fill="'+c+'"/><ellipse cx="50" cy="58" rx="17" ry="11" fill="'+mix(c,1.08)+'"/>';
+  if(t==='lion')  return '<circle cx="50" cy="44" r="30" fill="'+c+'"/><ellipse cx="50" cy="56" rx="18" ry="13" fill="'+mix(c,1.18)+'"/>';
+  return '<ellipse cx="50" cy="43" rx="29" ry="28" fill="'+c+'"/>';
+}
+function hairArt(ac,h,t){
+  switch(ac){
+    case 'cap': return '<path d="M18 32 a32 30 0 0 1 64 0 z" fill="'+h+'"/><rect x="10" y="30" width="34" height="7" rx="3.5" fill="'+mix(h,0.8)+'"/><circle cx="50" cy="6" r="4" fill="'+mix(h,1.2)+'"/>';
+    case 'ushanka': return '<path d="M15 33 a35 30 0 0 1 70 0 z" fill="'+h+'"/><rect x="9" y="30" width="82" height="9" rx="4.5" fill="'+mix(h,0.85)+'"/><circle cx="50" cy="7" r="5" fill="'+mix(h,1.25)+'"/>';
+    case 'hat': return '<ellipse cx="50" cy="26" rx="40" ry="7" fill="'+h+'"/><path d="M32 26 q4 -22 18 -22 q14 0 18 22 z" fill="'+h+'"/><rect x="31" y="18" width="38" height="7" fill="'+mix(h,0.75)+'"/>';
+    case 'tophat': return '<ellipse cx="50" cy="28" rx="38" ry="8" fill="'+h+'"/><rect x="28" y="-2" width="44" height="28" rx="3" fill="'+h+'"/><rect x="28" y="18" width="44" height="8" fill="#C94F5B"/>';
+    case 'bonnet': return '<path d="M12 36 q2 -34 38 -34 q36 0 38 34 q-38 -16 -76 0z" fill="'+h+'"/><circle cx="80" cy="6" r="7" fill="'+mix(h,1.2)+'"/>';
+    case 'bun': return '<path d="M18 40 q0 -34 32 -34 q32 0 32 34 q-8 -26 -32 -24 q-24 2 -32 24z" fill="'+h+'"/><circle cx="80" cy="12" r="12" fill="'+h+'"/>';
+    case 'bow': return '<path d="M18 40 q0 -32 32 -32 q32 0 32 32 q-10 -24 -32 -22 q-22 -2 -32 22z" fill="'+h+'"/><path d="M70 12 q16 -10 18 4 q-14 12 -18 -4z" fill="#F25C7A"/><path d="M70 12 q-10 -10 -15 -4 q7 10 15 4z" fill="#F25C7A"/><circle cx="69" cy="14" r="4.5" fill="#FF8FA3"/>';
+    case 'hair': return '<path d="M18 40 q0 -34 32 -34 q32 0 32 34 q-10 -24 -32 -22 q-22 -2 -32 22z" fill="'+h+'"/>';
+    case 'ladybug': return '<path d="M22 36 q0 -30 28 -30 q28 0 28 30 q-8 -22 -28 -20 q-20 2 -28 20z" fill="'+h+'"/>'
+      + '<g fill="#222"><circle cx="34" cy="22" r="3.2"/><circle cx="50" cy="14" r="3.2"/><circle cx="66" cy="22" r="3.2"/><circle cx="42" cy="40" r="3.2"/><circle cx="58" cy="40" r="3.2"/></g>'
+      + '<line x1="50" y1="6" x2="46" y2="-4" stroke="#444" stroke-width="2"/><line x1="50" y1="6" x2="54" y2="-4" stroke="#444" stroke-width="2"/><circle cx="46" cy="-4" r="3" fill="#444"/><circle cx="54" cy="-4" r="3" fill="#444"/>';
+    case 'mask': return '<path d="M26 38 q24 -16 48 0 q-4 -8 -24 -8 q-20 0 -24 8z" fill="#222"/>'
+      + '<ellipse cx="38" cy="40" rx="7" ry="6" fill="#FFF"/><ellipse cx="62" cy="40" rx="7" ry="6" fill="#FFF"/>'
+      + '<circle cx="38" cy="40" r="3" fill="#222"/><circle cx="62" cy="40" r="3" fill="#222"/>'
+      + '<path d="M26 38 q-6 -4 -10 -2 M74 38 q6 -4 10 -2" stroke="#222" stroke-width="2.4" fill="none" stroke-linecap="round"/>';
+    case 'propeller': return '<path d="M18 40 q2 -30 32 -30 q30 0 32 30 q-12 -20 -32 -18 q-20 -2 -32 18z" fill="'+h+'"/><rect x="46" y="-6" width="7" height="14" rx="3" fill="#9AA7B8"/><g class="prop"><ellipse cx="49" cy="-6" rx="24" ry="4" fill="#C9CFD8"/></g><circle cx="49" cy="-6" r="5" fill="#7A8AA0"/>';
+    case 'curly': return '<circle cx="22" cy="20" r="11" fill="'+mix(h,0.9)+'"/><circle cx="78" cy="20" r="11" fill="'+mix(h,0.9)+'"/><path d="M20 36 q4 -22 30 -22 q26 0 30 22 q-12 -16 -30 -16 q-18 0 -30 16z" fill="'+h+'"/>';
+
+    /* --- v3.0 --- */
+    /* Эльза: платиновая блондинка, чёлка + коса через плечо + снежинки */
+    case 'elsa': return '<path d="M16 44 q-2 -38 34 -38 q36 0 34 38 q-6 -28 -34 -26 q-28 -2 -34 26z" fill="'+h+'"/>'
+      + '<path d="M24 40 q-10 -22 6 -34" stroke="'+mix(h,1.1)+'" stroke-width="7" fill="none" stroke-linecap="round"/>'
+      + '<path d="M74 28 q18 20 14 52 q-4 24 -14 40" stroke="'+h+'" stroke-width="15" fill="none" stroke-linecap="round"/>'
+      + '<path d="M74 28 q18 20 14 52" stroke="'+mix(h,0.85)+'" stroke-width="4" fill="none" stroke-linecap="round"/>'
+      + '<g stroke="#BFEAFF" stroke-width="2.2" stroke-linecap="round"><path d="M22 16 v9 M17.5 20.5 l9 0 M26.5 20.5 l-9 0"/></g>';
+    /* Анна: рыжеватые волосы + две косы + белая прядь */
+    case 'anna': return '<path d="M16 44 q-2 -38 34 -38 q36 0 34 38 q-8 -28 -34 -26 q-26 -2 -34 26z" fill="'+h+'"/>'
+      + '<path d="M22 30 q10 -12 22 -12" stroke="#F5E8DC" stroke-width="4" fill="none" stroke-linecap="round"/>'
+      + '<path d="M20 34 q-14 18 -10 44" stroke="'+h+'" stroke-width="12" fill="none" stroke-linecap="round"/>'
+      + '<path d="M80 34 q14 18 10 44" stroke="'+h+'" stroke-width="12" fill="none" stroke-linecap="round"/>';
+    /* Шрэк: лысоватый, только маленькие уши-трубочки (уши уже в earArt) */
+    case 'shrek': return '<path d="M30 26 q20 -14 40 0 q-20 -6 -40 0z" fill="'+mix(h,0.85)+'"/>';
+    /* Волк «Ну, погоди!»: кепка */
+    case 'npvolk': return '<path d="M17 34 a33 28 0 0 1 66 0 z" fill="#4A5E7B"/><rect x="11" y="31" width="32" height="7" rx="3.5" fill="#3A4E6B"/><circle cx="50" cy="8" r="4" fill="#6E84A0"/>';
+    /* Заяц «Ну, погоди!»: чубчик */
+    case 'npzayac': return '<path d="M42 14 q8 -12 16 -3" stroke="'+h+'" stroke-width="5" fill="none" stroke-linecap="round"/>';
+    /* Крош: уши уже в earArt, добавим макушку */
+    case 'krosh': return '<path d="M34 16 q16 -10 32 0 q-16 -4 -32 0z" fill="'+mix(h,1.2)+'"/>';
+    /* Ёжик: иголки уже в earArt */
+    case 'ezhik': return '<path d="M34 18 q16 -8 32 0 q-16 -3 -32 0z" fill="'+mix(h,1.15)+'"/>';
+    /* Нюша: бантик на макушке */
+    case 'nyusha': return '<path d="M50 12 q-16 -8 -20 6 q14 6 20 -6z" fill="#F25C7A"/><path d="M50 12 q16 -8 20 6 q-14 6 -20 -6z" fill="#F25C7A"/><circle cx="50" cy="13" r="5" fill="#FF8FA3"/>';
+    /* Моана: тёмные волнистые волосы + красный цветок */
+    case 'moana': return '<path d="M15 46 q-3 -40 35 -40 q38 0 35 40 q-6 -30 -35 -28 q-29 -2 -35 28z" fill="'+h+'"/>'
+      + '<path d="M18 44 q-8 26 -2 52" stroke="'+h+'" stroke-width="13" fill="none" stroke-linecap="round"/>'
+      + '<path d="M82 44 q8 26 2 52" stroke="'+h+'" stroke-width="13" fill="none" stroke-linecap="round"/>'
+      + '<g transform="translate(78,22)"><g fill="#E8455A"><ellipse cx="0" cy="-7" rx="4.6" ry="7"/><ellipse cx="7" cy="0" rx="7" ry="4.6"/><ellipse cx="0" cy="7" rx="4.6" ry="7"/><ellipse cx="-7" cy="0" rx="7" ry="4.6"/></g><circle cx="0" cy="0" r="3.6" fill="#FFD86A"/></g>';
+    /* Симба: грива уже в earArt */
+    case 'simba': return '<path d="M32 20 q18 -10 36 0 q-18 -5 -36 0z" fill="'+mix(h,0.78)+'"/>';
+    /* Рапунцель: очень длинная золотая коса */
+    case 'rapunzel': return '<path d="M16 44 q-2 -38 34 -38 q36 0 34 38 q-8 -28 -34 -26 q-26 -2 -34 26z" fill="'+h+'"/>'
+      + '<path d="M78 30 q22 26 16 66 q-6 40 -4 66" stroke="'+h+'" stroke-width="16" fill="none" stroke-linecap="round"/>'
+      + '<path d="M78 30 q22 26 16 66" stroke="'+mix(h,0.85)+'" stroke-width="4.5" fill="none" stroke-linecap="round"/>'
+      + '<g fill="#F5A0C8"><circle cx="28" cy="24" r="3.4"/><circle cx="72" cy="34" r="3.4"/><circle cx="36" cy="16" r="2.8"/></g>';
+    default: return '';
+  }
+}
+function eyeArt(e){
+  const blink='<circle cx="41.5" cy="41" r="1.7" fill="#fff"/><circle cx="65.5" cy="41" r="1.7" fill="#fff"/>';
+  if(e==='big') return '<ellipse cx="38" cy="42" rx="9.5" ry="10.5" fill="#fff"/><ellipse cx="62" cy="42" rx="9.5" ry="10.5" fill="#fff"/><circle cx="39" cy="43" r="4.8" fill="'+INK+'"/><circle cx="63" cy="43" r="4.8" fill="'+INK+'"/>'+blink;
+  if(e==='wide') return '<circle cx="36" cy="40" r="14" fill="#FFF8E1"/><circle cx="64" cy="40" r="14" fill="#FFF8E1"/><circle cx="37" cy="41" r="7" fill="'+INK+'"/><circle cx="65" cy="41" r="7" fill="'+INK+'"/><circle cx="40" cy="38" r="2.4" fill="#fff"/><circle cx="68" cy="38" r="2.4" fill="#fff"/>';
+  if(e==='glasses') return '<circle cx="38" cy="43" r="5" fill="'+INK+'"/><circle cx="62" cy="43" r="5" fill="'+INK+'"/><circle cx="38" cy="43" r="12" fill="none" stroke="#7A8AA0" stroke-width="2.6"/><circle cx="62" cy="43" r="12" fill="none" stroke="#7A8AA0" stroke-width="2.6"/><line x1="50" y1="43" x2="50" y2="43" stroke="#7A8AA0" stroke-width="2.6"/><path d="M26 40 l-8 -4 M74 40 l8 -4" stroke="#7A8AA0" stroke-width="2.6"/>';
+  if(e==='goggles') return '<rect x="20" y="30" width="60" height="24" rx="12" fill="#CFE6F7" opacity=".85"/><circle cx="36" cy="42" r="7.5" fill="#fff"/><circle cx="64" cy="42" r="7.5" fill="#fff"/><circle cx="37" cy="43" r="4" fill="#2E6E9E"/><circle cx="65" cy="43" r="4" fill="#2E6E9E"/><circle cx="39" cy="40" r="1.6" fill="#fff"/><circle cx="67" cy="40" r="1.6" fill="#fff"/>';
+  if(e==='glad') return '<path d="M30 45 q8 -11 16 0" stroke="'+INK+'" stroke-width="3.4" fill="none" stroke-linecap="round"/><path d="M54 45 q8 -11 16 0" stroke="'+INK+'" stroke-width="3.4" fill="none" stroke-linecap="round"/>';
+  if(e==='sleepy') return '<path d="M30 44 q8 8 16 0" stroke="'+INK+'" stroke-width="3.2" fill="none" stroke-linecap="round"/><path d="M54 44 q8 8 16 0" stroke="'+INK+'" stroke-width="3.2" fill="none" stroke-linecap="round"/>';
+  if(e==='angry') return '<circle cx="38" cy="43" r="5.2" fill="'+INK+'"/><circle cx="62" cy="43" r="5.2" fill="'+INK+'"/><path d="M28 33 l14 5 M72 33 l-14 5" stroke="'+INK+'" stroke-width="3.6" stroke-linecap="round"/>';
+  return '<circle cx="38" cy="43" r="5" fill="'+INK+'"/><circle cx="62" cy="43" r="5" fill="'+INK+'"/><circle cx="40" cy="41" r="1.8" fill="#fff"/><circle cx="64" cy="41" r="1.8" fill="#fff"/>';
+}
+function noseArt(n,c2){
+  if(n==='button') return '<ellipse cx="50" cy="54" rx="8" ry="6" fill="'+INK+'"/>';
+  if(n==='snout') return '<ellipse cx="50" cy="56" rx="13" ry="9" fill="'+mix(c2,1.15)+'"/><ellipse cx="50" cy="54" rx="3.4" ry="2.6" fill="'+INK+'"/>';
+  if(n==='pigs') return '<ellipse cx="50" cy="55" rx="12" ry="9" fill="#E8899B"/><ellipse cx="45.5" cy="55" rx="2.2" ry="3" fill="#B85C70"/><ellipse cx="54.5" cy="55" rx="2.2" ry="3" fill="#B85C70"/>';
+  if(n==='long') return '<path d="M50 46 L50 70" stroke="#D8A760" stroke-width="8" stroke-linecap="round"/><ellipse cx="50" cy="70" rx="5" ry="4" fill="#C9944E"/>';
+  if(n==='dot') return '<circle cx="50" cy="53" r="3" fill="'+mix(c2,0.85)+'"/>';
+  return '';
+}
+function mouthArt(m){
+  if(m==='grin') return '<path d="M37 60 q13 14 26 0 q-13 4 -26 0z" fill="'+INK+'"/><path d="M43 62 h14 l-3 6 h-8z" fill="#fff"/>';
+  if(m==='open') return '<ellipse cx="50" cy="64" rx="10" ry="8" fill="'+INK+'"/><ellipse cx="50" cy="67" rx="6" ry="4" fill="#C94F5B"/>';
+  if(m==='flat') return '<path d="M41 63 h18" stroke="'+INK+'" stroke-width="3.2" stroke-linecap="round"/>';
+  if(m==='beak') return '<path d="M42 52 L58 52 L50 68 Z" fill="#F2A93B"/><path d="M42 56 L58 56" stroke="'+mix('#F2A93B',0.8)+'" stroke-width="1.6"/>';
+  return '<path d="M40 60 q10 10 20 0" stroke="'+INK+'" stroke-width="3.2" fill="none" stroke-linecap="round"/>';
+}
+function faceSVG(k){
+  const ch=CHARS[k]; if(!ch) return '';
+  const a=ch.art||{}, t=a.t||'kid';
+  const c=a.c||'#FFDCC0', c2=a.c2||'#D89B6C', h=a.h||'#8B6B3A';
+  const cl=a.cloth||c, ey=a.e||'dot', mo=a.m||'smile';
+  let s='';
+  s+='<path d="M13 100c3 -21 15 -30 37 -30s34 9 37 30z" fill="'+cl+'"/>';
+  s+='<path d="M13 100c3 -21 15 -30 37 -30s34 9 37 30z" fill="none" stroke="'+mix(cl,0.85)+'" stroke-width="2"/>';
+  s+=earArt(t,c,c2,a.ac);
+  s+=headArt(t,c,c2);
+  if(t==='kid'||t==='man'||t==='woman'||t==='robot'||t==='croc'||t==='dog'||t==='cat'
+     ||t==='ogre'||t==='lion'||t==='smesh') s+=hairArt(a.ac,h,t);
+  s+=eyeArt(ey);
+  if(a.nose!=='beak') s+=noseArt(a.nose,c2);
+  s+=mouthArt(mo);
+  if(a.ac==='whiskers') s+='<path d="M20 54 h14 M20 60 h14 M66 54 h14 M66 60 h14" stroke="'+INK+'" stroke-width="1.8" opacity=".55" stroke-linecap="round"/>';
+  if(a.beard) s+='<path d="M28 62 q22 22 44 0 q0 26 -22 26 q-22 0 -22 -26z" fill="#EFEAE2"/>';
+  if(t==='kid'||t==='man'||t==='woman') s+='<ellipse cx="27" cy="52" rx="6" ry="4" fill="#FFB3B3" opacity=".5"/><ellipse cx="73" cy="52" rx="6" ry="4" fill="#FFB3B3" opacity=".5"/>';
+  return s;
+}
+function faceHTML(k,cls){
+  return '<span class="fc '+(cls||'')+'"><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">'+faceSVG(k)+'</svg></span>';
+}
+function walkSVG(k){
+  const ch=CHARS[k]; if(!ch) return '';
+  const legs=(ch.art&&ch.art.legs)||'#5A4636';
+  return '<svg viewBox="0 0 100 132" xmlns="http://www.w3.org/2000/svg" class="walker">'
+    + '<g class="wl">'
+    + '<g class="legA"><rect x="34" y="76" width="13" height="34" rx="6.5" fill="'+legs+'"/></g>'
+    + '<g class="legB"><rect x="53" y="76" width="13" height="34" rx="6.5" fill="'+legs+'"/></g>'
+    + '<g transform="translate(0,-6) scale(0.94) translate(3,0)">'+faceSVG(k)+'</g>'
+    + '</g></svg>';
+}
+function walkHTML(k,cls){
+  return '<span class="wc '+(cls||'')+'">'+walkSVG(k)+'</span>';
+}
+const CHAR_KEYS = Object.keys(CHARS);
+function sayAs(key,text,onend){ const c=CHARS[key]||CHARS.masha; TTS.say(text,c.r,c.p,onend); }
+
+/* =========================================================
+   A6. ЛОКАЦИИ
+   ========================================================= */
+const LOCS = [
+ {id:1,name:'Солнечная поляна',sub:'Буквы от А до Я',grass:'#A8D96A',sand:'#F5DFA8',deco:'flowers',
+  boss:'lisa',bossTitle:'Лиса Патрикеевна',sea:0,sticker:{t:'Солнечная поляна'}},
+ {id:2,name:'Сосновая роща',sub:'Цифры от 1 до 10',grass:'#8FC98A',sand:'#EFDCA6',deco:'forest',
+  boss:'zayac',bossTitle:'Заяц-считалочка',sea:0,sticker:{t:'Сосновая роща'}},
+ {id:3,name:'Синий пруд Лунтика',sub:'Слоги-обнимашки',grass:'#9FD9A8',sand:'#E6F2C8',deco:'pond',
+  boss:'ladybug',bossTitle:'Леди Баг',sea:0,sticker:{t:'Синий пруд'}},
+ {id:4,name:'Город мастеров',sub:'Числа от 10 до 100',grass:'#A8C8E8',sand:'#DCE6F2',deco:'gears',
+  boss:'frekenbok',bossTitle:'Фрекен Бок',sea:0,sticker:{t:'Город мастеров'}},
+ {id:5,name:'Деревня Простоквашино',sub:'Слова по слогам',grass:'#B4D97A',sand:'#F0DFA8',deco:'village',
+  boss:'pechkin',bossTitle:'Почтальон Печкин',sea:0,sticker:{t:'Простоквашино'}},
+ {id:6,name:'Шоколадная фабрика',sub:'Сложение и вычитание',grass:'#D9B08A',sand:'#F2DCC0',deco:'sweet',
+  boss:'spiderman',bossTitle:'Человек-паук',sea:0,sticker:{t:'Шоколадная фабрика'}},
+ {id:7,name:'Космодром Знайки',sub:'Таблица умножения (бонус)',grass:'#C9C4F0',sand:'#DCD8F5',deco:'space',
+  boss:'sova',bossTitle:'Мудрая Сова',sea:1,sticker:{t:'Космодром'}},
+ {id:8,name:'Большой театр',sub:'Финальный салют',grass:'#F5A0B8',sand:'#FFE0C8',deco:'theatre',
+  boss:'supercat',bossTitle:'Супер Кот',sea:0,sticker:{t:'Большой театр'}},
+ {id:9,name:'Замок Винкс',sub:'Феи и звёзды (бонус)',grass:'#F5B0E0',sand:'#FBE0F4',deco:'castle',
+  boss:'rumi',bossTitle:'Руми',sea:1,sticker:{t:'Замок Винкс'}},
+ /* --- v3.0 таблица умножения: 4 части строго по порядку --- */
+ {id:10,name:'Сад единицы',sub:'Умножение на 1',grass:'#A8D96A',sand:'#F5DFA8',deco:'flowers',
+  boss:'krosh',bossTitle:'Крош',sea:0,sticker:{t:'Сад единицы'}},
+ {id:11,name:'Двойная поляна',sub:'Умножение на 2',grass:'#8FC98A',sand:'#EFDCA6',deco:'forest',
+  boss:'nyusha',bossTitle:'Нюша',sea:0,sticker:{t:'Двойная поляна'}},
+ {id:12,name:'Тройной водопад',sub:'Умножение на 3',grass:'#9FD9A8',sand:'#E6F2C8',deco:'pond',
+  boss:'ezhik',bossTitle:'Ёжик',sea:0,sticker:{t:'Тройной водопад'}},
+ {id:13,name:'Вершина пятёрки',sub:'Умножение на 4 и 5',grass:'#D9B08A',sand:'#F2DCC0',deco:'castle',
+  boss:'simba',bossTitle:'Симба',sea:0,sticker:{t:'Вершина пятёрки'}}
+];
+const MAIN_STAGES = 6;               // обязательных материка (дальше — бонус)
+const TEAM_MAX    = 6;               // максимум героев в команде
+const locOf = id => LOCS[Math.max(1,Math.min(13,id))-1];
+const LAST_STAGE = LOCS.length;   // v3.0: 13 материков
+
+/* =========================================================
+   A7. УЧЕБНЫЕ ДАННЫЕ
+   ========================================================= */
+const ALPHA = 'АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ'.split('');
+const LNAME = {А:'а',Б:'бэ',В:'вэ',Г:'гэ',Д:'дэ',Е:'е',Ё:'ё',Ж:'жэ',З:'зэ',И:'и',Й:'и краткое',К:'ка',Л:'эль',
+  М:'эм',Н:'эн',О:'о',П:'пэ',Р:'эр',С:'эс',Т:'тэ',У:'у',Ф:'эф',Х:'ха',Ц:'цэ',Ч:'че',Ш:'ша',Щ:'ща',
+  Ъ:'твёрдый знак',Ы:'ы',Ь:'мягкий знак',Э:'э',Ю:'ю',Я:'я'};
+const SIM = {
+  А:['Д','М','Л','О'], Б:['В','Ь','Ъ','Р'], В:['Б','Я','Ь','Н'], Г:['П','Т','Р','Е'], Д:['Л','П','А','М'],
+  Е:['Ё','С','Э','З'], Ё:['Е','Э','С'], Ж:['К','Х','Ш','И'], З:['Э','Е','В','С'], И:['Й','Н','П','Ц'],
+  Й:['И','Н','Ц','Й'], К:['Ж','Х','Н','И'], Л:['Д','П','М','А'], М:['Н','Л','А','Д'], Н:['М','И','П','К'],
+  О:['С','Ф','Ю','А'], П:['Н','Л','Д','И'], Р:['Г','П','В','Ь'], С:['О','Э','Е','З'], Т:['Г','П','Ш','Е'],
+  У:['Ч','Ц','И','Ю'], Ф:['О','С','Х','А'], Х:['Ж','К','У','Ф'], Ц:['Щ','У','И','Й'], Ч:['У','Ц','Щ','Т'],
+  Ш:['Щ','Ц','Т','И'], Щ:['Ш','Ц','Ч','И'], Ъ:['Ь','Б','Ы'], Ы:['Ь','Ъ','Б'], Ь:['Ъ','Ы','Б','Р'],
+  Э:['З','С','Е','Ё'], Ю:['О','У','Ф','А'], Я:['В','Л','М','Д']
+};
+const WORDS_BY_LETTER = {А:['Арбуз','🍉'],Б:['Банан','🍌'],В:['Волк','🐺'],Г:['Гриб','🍄'],Д:['Дом','🏠'],
+  Е:['Ель','🌲'],Ё:['Ёлка','🎄'],Ж:['Жук','🪲'],З:['Зонт','☂️'],И:['Иголка','🪡'],Й:['Йогурт','🥛'],
+  К:['Кот','🐱'],Л:['Лимон','🍋'],М:['Машина','🚗'],Н:['Нос','👃'],О:['Облако','☁️'],П:['Пила','🪚'],
+  Р:['Рыба','🐟'],С:['Собака','🐶'],Т:['Торт','🍰'],У:['Утка','🦆'],Ф:['Флаг','🚩'],Х:['Хлеб','🍞'],
+  Ц:['Цветок','🌸'],Ч:['Часы','⏰'],Ш:['Шапка','🧢'],Щ:['Щётка','🧹'],Э:['Эскимо','🍦'],Ю:['Юла','🌀'],Я:['Яблоко','🍎']};
+
+const CONS = 'БВГДЖЗКЛМНПРСТФХЦЧШЩ'.split('');
+const VOW  = 'АЕЁИОУЫЭЮЯ'.split('');
+
+const WORDS = [
+  ['собака',['со','ба','ка'],'🐶'],['машина',['ма','ши','на'],'🚗'],['луна',['лу','на'],'🌙'],
+  ['корова',['ко','ро','ва'],'🐄'],['рыба',['ры','ба'],'🐟'],['молоко',['мо','ло','ко'],'🥛'],
+  ['яблоко',['яб','ло','ко'],'🍎'],['школа',['шко','ла'],'🏫'],['карандаш',['ка','ран','даш'],'✏️'],
+  ['самолёт',['са','мо','лёт'],'✈️'],['солнце',['солн','це'],'☀️'],['чашка',['чаш','ка'],'☕'],
+  ['ложка',['лож','ка'],'🥄'],['шапка',['шап','ка'],'🧢'],['книга',['кни','га'],'📖'],
+  ['река',['ре','ка'],'🌊'],['гора',['го','ра'],'⛰️'],['цветок',['цве','ток'],'🌸'],
+  ['банан',['ба','нан'],'🍌'],['лимон',['ли','мон'],'🍋'],['помидор',['по','ми','дор'],'🍅'],
+  ['огурец',['о','гу','рец'],'🥒'],['кукла',['кук','ла'],'🪆'],['мячик',['мя','чик'],'⚽'],
+  ['кошка',['кош','ка'],'🐱'],['мышка',['мыш','ка'],'🐭'],['птица',['пти','ца'],'🐦'],
+  ['бабочка',['ба','боч','ка'],'🦋'],['картина',['кар','ти','на'],'🖼️'],['подушка',['по','душ','ка'],'🛏️'],
+  ['дорога',['до','ро','га'],'🛣️'],['снежинка',['сне','жин','ка'],'❄️'],['радуга',['ра','ду','га'],'🌈'],
+  ['зайка',['зай','ка'],'🐰'],['мишка',['миш','ка'],'🐻'],['лодка',['лод','ка'],'⛵'],
+  ['конфета',['кон','фе','та'],'🍬'],['тортик',['тор','тик'],'🍰'],['вагон',['ва','гон'],'🚃'],
+  ['самокат',['са','мо','кат'],'🛴'],['магазин',['ма','га','зин'],'🏪'],['тетрадь',['тет','радь'],'📓'],
+  ['ручка',['руч','ка'],'🖊️'],['сумка',['сум','ка'],'🎒'],['капуста',['ка','пус','та'],'🥬'],
+  ['морковь',['мор','ковь'],'🥕'],['музыка',['му','зы','ка'],'🎵']
+];
+
+const OBJ = {apple:'🍎',mush:'🍄',coin:'🪙',star:'⭐',fish:'🐟',flower:'🌸',ball:'⚽',candy:'🍬',leaf:'🍃',nut:'🌰'};
+
+const PRAISE = ['Молодец!','Правильно!','Умничка!','Точно!','Здорово!','Верно!','Супер!','Отлично!','Так держать!','В точку!'];
+const RETRY  = ['Попробуй ещё раз!','Не совсем, подумай!','Ой! Давай ещё разок.','Почти! Ещё попытка.','Не сдавайся!'];
+
+/* =========================================================
+   B1. ЭФФЕКТЫ И ОБЩИЙ UI
+   ========================================================= */
+function toast(text,kind){
+  const t = el('div','toast',text);
+  t.style.color = kind==='bad' ? '#B4532A' : '#2E7D32';
+  $('#app').appendChild(t);
+  setTimeout(()=>t.remove(),1500);
+}
+function burst(x,y,list){
+  (list||['✨','⭐','🌟','💫','🎉']).forEach((e,i)=>{
+    const s = el('span','spark',e);
+    s.style.left=x+'px'; s.style.top=y+'px';
+    s.style.setProperty('--dx',(rnd(180)-90)+'px');
+    s.style.setProperty('--dy',(-70-rnd(130))+'px');
+    s.style.animationDelay=(i*0.04)+'s';
+    $('#fx').appendChild(s);
+    setTimeout(()=>s.remove(),1200);
+  });
+}
+function burstAt(node){ if(!node) return; const r=node.getBoundingClientRect(); burst(r.left+r.width/2,r.top+r.height/2); }
+
+function show(id){
+  $$('.screen').forEach(s=>s.classList.remove('active'));
+  $('#'+id).classList.add('active');
+  $('#topbar').classList.toggle('hide', id==='scr-title'||id==='scr-hero');
+}
+function setProgress(done,total,label){
+  $('#progFill').style.width = (total?Math.round(done/total*100):0)+'%';
+  $('#progText').textContent = label || (total ? done+' / '+total : S.crystals.length+' из 6 💎');
+}
+
+/* =========================================================
+   B2. ВЫБОР ГЕРОЯ
+   ========================================================= */
+const STARTERS = ['masha','medved','luntik','simka','nolik','fyodor','matroskin','cheburashka','buratino','vinni','znayka','karlson',
+  /* v3.0 новые герои */
+  'elsa','anna','shrek','moana','simba','rapunzel','krosh','ezhik','nyusha','volkNP','zayacNP','ladybug','supercat','spiderman','rumi'];
+function buildHeroGrid(){
+  const g=$('#heroGrid'); g.innerHTML='';
+  STARTERS.forEach(k=>{
+    const c=CHARS[k];
+    const card=el('div','heroCard'+(S.hero===k?' sel':''));
+    card.innerHTML='<span class="heroFace"><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">'+faceSVG(k)+'</svg></span>'
+                 + '<div class="heroName">'+c.n+'</div>';
+    card.onclick=()=>{
+      S.hero=k;
+      if(S.team.indexOf(k)<0) S.team=[k]; else S.team=[k].concat(S.team.filter(x=>x!==k));
+      save(); buildHeroGrid(); A.sfx('pop');
+      TTS.say('Я '+c.n+'! '+pick(c.hi),c.r,c.p);
+    };
+    g.appendChild(card);
+  });
+}
+
+/* =========================================================
+   МИР: рисуем карту и водим по ней героев
+   ========================================================= */
+/* v3.0: 13 точек в поле 1000×780, острова не перекрываются (мин. расстояние ~195) */
+const POS = [[110,150],[285,95],[480,175],[665,100],[880,180],
+             [790,355],[600,300],[395,390],[195,320],
+             [115,545],[330,610],[560,520],[810,600]];
+let ISLE_LEN = [], partyLen = 0, partyAt = -1, walkRAF = null, walkGen = 0, mapBusy = false;
+
+function walkerInner(k){
+  const s = walkSVG(k);
+  return s.replace(/^<svg[^>]*>/,'').replace(/<\/svg>\s*$/,'');
+}
+function figAt(x,y,k,extra){
+  return '<g class="fig '+(extra||'')+'" transform="translate('+x+','+y+') scale(0.52) translate(-50,-132)">'+walkerInner(k)+'</g>';
+}
+function decoArt(kind){
+  switch(kind){
+    case 'flowers':
+      return '<g><circle cx="-46" cy="-52" r="12" fill="#FFD86A"/><g stroke="#FFD86A" stroke-width="3" stroke-linecap="round">'
+        +'<line x1="-46" y1="-70" x2="-46" y2="-76"/><line x1="-60" y1="-52" x2="-66" y2="-52"/><line x1="-32" y1="-52" x2="-26" y2="-52"/></g>'
+        +'<g><line x1="-26" y1="6" x2="-26" y2="-10" stroke="#6FA84E" stroke-width="3"/><circle cx="-26" cy="-14" r="7" fill="#FF8FA3"/><circle cx="-26" cy="-14" r="3" fill="#FFE08A"/></g>'
+        +'<g><line x1="4" y1="8" x2="4" y2="-8" stroke="#6FA84E" stroke-width="3"/><circle cx="4" cy="-12" r="7" fill="#FFD86A"/><circle cx="4" cy="-12" r="3" fill="#F2874B"/></g>'
+        +'<g><line x1="32" y1="4" x2="32" y2="-12" stroke="#6FA84E" stroke-width="3"/><circle cx="32" cy="-16" r="7" fill="#C6B6E8"/><circle cx="32" cy="-16" r="3" fill="#FFE08A"/></g></g>';
+    case 'forest':
+      return '<g><path d="M-34 8 L-34 -6 L-42 -6 L-34 -22 L-26 -6 L-34 -6" fill="#4E8A5A"/>'
+        +'<rect x="-37" y="6" width="6" height="8" fill="#8B5E3C"/>'
+        +'<path d="M4 10 L4 -12 L-6 -12 L4 -34 L14 -12 L4 -12" fill="#5E9E6A"/><rect x="1" y="8" width="6" height="9" fill="#8B5E3C"/>'
+        +'<path d="M40 6 L40 -4 L33 -4 L40 -18 L47 -4 L40 -4" fill="#4E8A5A"/><rect x="37" y="4" width="6" height="8" fill="#8B5E3C"/>'
+        +'<g transform="translate(-14,2)"><rect x="-5" y="-4" width="10" height="10" rx="3" fill="#F2E2C8"/><path d="M-9 -4 q9 -12 18 0z" fill="#E85C5C"/><circle cx="-3" cy="-6" r="2" fill="#fff" opacity=".8"/><circle cx="4" cy="-8" r="2" fill="#fff" opacity=".8"/></g></g>';
+    case 'pond':
+      return '<g><ellipse cx="0" cy="8" rx="46" ry="18" fill="#8FD0F0"/><ellipse cx="0" cy="6" rx="38" ry="13" fill="#B4E4F7"/>'
+        +'<ellipse cx="-14" cy="4" rx="12" ry="5" fill="#7AC96A"/><circle cx="-14" cy="1" r="4" fill="#F5A0B8"/>'
+        +'<ellipse cx="16" cy="10" rx="10" ry="4" fill="#7AC96A"/><circle cx="16" cy="8" r="3.5" fill="#FFD86A"/>'
+        +'<g stroke="#6FA84E" stroke-width="3" stroke-linecap="round"><line x1="-44" y1="8" x2="-46" y2="-8"/><line x1="-52" y1="8" x2="-56" y2="-6"/></g>'
+        +'<circle cx="-46" cy="-11" r="4" fill="#A86A4E"/><circle cx="-56" cy="-9" r="4" fill="#A86A4E"/></g>';
+    case 'gears': {
+      let s='<g>';
+      s+=gear(-26,0,14,'#F2C14E')+gear(14,-8,11,'#8FC7EE')+gear(30,10,8,'#F5A0B8');
+      s+='<rect x="-6" y="-26" width="22" height="30" rx="5" fill="#EFE7DC"/><path d="M-10 -26 L18 -26 L4 -42 Z" fill="#E8895F"/><rect x="2" y="-18" width="8" height="8" rx="2" fill="#8FC7EE"/>';
+      return s+'</g>';
+    }
+    case 'village':
+      return '<g><rect x="-34" y="-14" width="34" height="28" rx="4" fill="#F2E2C8"/><path d="M-40 -14 L-17 -34 L6 -14 Z" fill="#C46C5A"/>'
+        +'<rect x="-26" y="-6" width="12" height="12" rx="2" fill="#8FC7EE"/>'
+        +'<rect x="-6" y="-2" width="5" height="18" fill="#A8763E"/><rect x="4" y="-2" width="5" height="18" fill="#A8763E"/><rect x="14" y="-2" width="5" height="18" fill="#A8763E"/>'
+        +'<rect x="-8" y="4" width="28" height="5" fill="#A8763E"/>'
+        +'<g transform="translate(38,-2)"><rect x="-4" y="0" width="8" height="16" fill="#8B5E3C"/><circle cx="0" cy="-6" r="13" fill="#6FA84E"/><circle cx="-8" cy="0" r="9" fill="#7AC96A"/></g></g>';
+    case 'sweet':
+      return '<g><rect x="-30" y="-6" width="60" height="20" rx="6" fill="#C98B54"/><rect x="-30" y="-14" width="60" height="10" rx="5" fill="#F2C14E"/>'
+        +'<rect x="-30" y="-22" width="60" height="10" rx="5" fill="#F5A0B8"/><circle cx="0" cy="-26" r="5" fill="#E85C5C"/>'
+        +'<g transform="translate(-52,4)"><circle cx="0" cy="0" r="9" fill="#F25C7A"/><path d="M-9 0 l-7 -6 v12z" fill="#FF8FA3"/><path d="M9 0 l7 -6 v12z" fill="#FF8FA3"/></g>'
+        +'<g transform="translate(50,2)"><rect x="-8" y="-10" width="16" height="20" rx="3" fill="#8B5E3C"/><rect x="-8" y="-4" width="16" height="4" fill="#F2E2C8"/></g></g>';
+    case 'space':
+      return '<g><ellipse cx="0" cy="18" rx="52" ry="12" fill="#EFEAF7"/>'
+        +'<g transform="translate(0,-24)"><path d="M-11 12 L-11 -14 Q0 -30 11 -14 L11 12 Z" fill="#F2F4F8" stroke="#C9CFD8" stroke-width="2"/>'
+        +'<circle cx="0" cy="-6" r="5" fill="#8FC7EE"/><path d="M-11 6 L-21 20 L-11 15 Z" fill="#F25C7A"/><path d="M11 6 L21 20 L11 15 Z" fill="#F25C7A"/>'
+        +'<ellipse cx="0" cy="16" rx="9" ry="5" fill="#FFD86A" opacity=".9"/></g>'
+        +'<g fill="#FFE08A"><circle cx="-40" cy="-16" r="3"/><circle cx="42" cy="-24" r="2.5"/><circle cx="34" cy="10" r="2.5"/><circle cx="-46" cy="6" r="2"/></g></g>';
+    case 'theatre':
+      return '<g><path d="M-40 12 L0 -34 L40 12 Z" fill="#F25C7A"/>'
+        +'<path d="M-20 12 L-8 -14 L4 12 Z" fill="#FFF3E0"/><path d="M8 12 L20 -14 L32 12 Z" fill="#FFF3E0"/>'
+        +'<line x1="0" y1="-34" x2="0" y2="-46" stroke="#8B5E3C" stroke-width="3"/><path d="M0 -46 L16 -40 L0 -34 Z" fill="#FFD86A"/></g>';
+  }
+  return '';
+}
+function gear(cx,cy,r,fill){
+  let s='<g transform="translate('+cx+','+cy+')">';
+  for(let i=0;i<8;i++) s+='<rect x="-3.5" y="'+(-r-5)+'" width="7" height="10" rx="2.5" fill="'+fill+'" transform="rotate('+(i*45)+')"/>';
+  s+='<circle r="'+r+'" fill="'+fill+'"/><circle r="'+(r*0.4)+'" fill="#FFF8E1" opacity=".85"/></g>';
+  return s;
+}
+function isleArt(loc){
+  return '<ellipse cx="0" cy="28" rx="80" ry="30" fill="'+loc.sand+'"/>'
+       + '<ellipse cx="0" cy="18" rx="68" ry="24" fill="'+mix(loc.grass,0.9)+'"/>'
+       + '<ellipse cx="0" cy="14" rx="66" ry="22" fill="'+loc.grass+'"/>'
+       + decoArt(loc.deco);
+}
+function mapMarkup(){
+  return '<svg id="world" viewBox="0 0 1000 780" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">'
+    + '<defs>'
+    + '<linearGradient id="seaG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D8F1FC"/><stop offset="1" stop-color="#8AC9EC"/></linearGradient>'
+    + '<linearGradient id="skyG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#EAF7FF"/><stop offset="1" stop-color="#CFEEFB"/></linearGradient>'
+    + '</defs>'
+    + '<rect x="0" y="0" width="1000" height="780" fill="url(#seaG)"/>'
+    + '<g id="waves" opacity=".55"></g>'
+    + '<g id="clouds"></g>'
+    + '<path id="trailG" fill="none" stroke="#FFFFFF" stroke-width="14" stroke-linecap="round" stroke-dasharray="2 22" opacity=".9"/>'
+    + '<path id="trail" fill="none" stroke="#F2C14E" stroke-width="8" stroke-linecap="round" stroke-dasharray="2 22" opacity=".95"/>'
+    + '<g id="isles"></g>'
+    + '<g id="guestG" class="guest"></g>'
+    + '<g id="partyG" class="party"></g>'
+    + '</svg><div id="mapBubble"></div>';
+}
+function buildSea(){
+  const w=$('#waves'), c=$('#clouds');
+  if(!w) return;
+  let s='';
+  for(let i=0;i<26;i++){
+    const x=rnd(1000), y=40+rnd(700);
+    s+='<path d="M'+x+' '+y+' q10 -7 20 0 q10 7 20 0" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="'+(0.25+rnd(40)/100).toFixed(2)+'"/>';
+  }
+  w.innerHTML=s;
+  let cl='';
+  for(let i=0;i<7;i++){
+    const x=40+rnd(920), y=25+rnd(180), sc=0.6+rnd(8)/10;
+    cl+='<g class="cloud" style="animation-duration:'+(40+rnd(40))+'s;animation-delay:-'+rnd(40)+'s" transform="translate('+x+','+y+') scale('+sc.toFixed(2)+')">'
+      +'<ellipse cx="0" cy="0" rx="34" ry="20" fill="#FFFFFF" opacity=".9"/><ellipse cx="-24" cy="6" rx="22" ry="14" fill="#FFFFFF" opacity=".9"/>'
+      +'<ellipse cx="24" cy="6" rx="24" ry="15" fill="#FFFFFF" opacity=".9"/></g>';
+  }
+  c.innerHTML=cl;
+}
+function buildIsles(){
+  const wrap=$('#isles'); if(!wrap) return;
+  wrap.innerHTML='';
+  for(let i=1;i<=LAST_STAGE;i++){
+    const loc=locOf(i), p=POS[i-1];
+    const done=S.crystals.indexOf(i)>=0;
+    const locked=i>S.stage && !done;
+    const cur=i===S.stage && !done;
+    const g=document.createElementNS('http://www.w3.org/2000/svg','g');
+    g.setAttribute('class','isle'+(locked?' locked':'')+(done?' done':'')+(cur?' cur':''));
+    g.setAttribute('transform','translate('+p[0]+','+p[1]+')');
+    g.setAttribute('data-i',i);
+    let inner='';
+    if(cur) inner+='<ellipse class="pulse" cx="0" cy="24" rx="86" ry="34" fill="none" stroke="#FFD86A" stroke-width="6"/>';
+    inner+=isleArt(loc);
+    if(done) inner+='<g transform="translate(58,-30)"><path d="M0 -18 L13 -7 L8 12 L-8 12 L-13 -7 Z" fill="#FFD86A" stroke="#E0A32E" stroke-width="2"/><path d="M0 -18 L0 12" stroke="#FFF3C4" stroke-width="2"/></g>';
+    if(locked) inner+='<g transform="translate(0,-8)"><rect x="-16" y="-6" width="32" height="26" rx="6" fill="#9AA7B8"/><path d="M-9 -6 v-8 a9 9 0 0 1 18 0 v8" fill="none" stroke="#9AA7B8" stroke-width="6"/><circle cx="0" cy="6" r="4" fill="#EFEAE2"/></g>';
+    inner+='<g transform="translate(0,86)"><rect x="-96" y="-20" width="192" height="30" rx="15" fill="#FFFFFF" opacity=".95"/>'
+         + '<text x="0" y="1" text-anchor="middle" class="islName">'+loc.name+'</text></g>';
+    inner+='<g transform="translate(0,112)"><rect x="-92" y="-15" width="184" height="24" rx="12" fill="#EAF6FF" opacity=".95"/>'
+         + '<text x="0" y="2" text-anchor="middle" class="islSub">'+loc.sub+'</text></g>';
+    /* содержимое — в отдельную группу: её и двигаем, чтобы не сбить transform="translate()" на самом .isle */
+    g.innerHTML='<g class="islInner">'+inner+'</g>';
+    g.addEventListener('click',()=>onIsleClick(i));
+    wrap.appendChild(g);
+  }
+}
+function trailD(){
+  let d='M'+POS[0][0]+','+POS[0][1];
+  for(let i=1;i<POS.length;i++){
+    const a=POS[i-1], b=POS[i];
+    d+=' Q'+((a[0]+b[0])/2)+','+((a[1]+b[1])/2-52)+' '+b[0]+','+b[1];
+  }
+  return d;
+}
+function measureTrail(){
+  const p=$('#trail');
+  if(p && typeof p.getTotalLength==='function' && typeof p.getPointAtLength==='function'){
+    let total=0; try{ total=p.getTotalLength(); }catch(e){ total=0; }
+    if(total>0){
+      ISLE_LEN=[];
+      for(let i=0;i<POS.length;i++){
+        let best=0,bd=1e9;
+        for(let l=0;l<=total;l+=3){
+          const pt=p.getPointAtLength(l);
+          const dx=pt.x-POS[i][0], dy=pt.y-POS[i][1];
+          const d=dx*dx+dy*dy;
+          if(d<bd){bd=d;best=l;}
+        }
+        ISLE_LEN.push(best);
+      }
+      return;
+    }
+  }
+  ISLE_LEN=[]; let acc=0; ISLE_LEN.push(0);
+  for(let i=1;i<POS.length;i++){
+    const dx=POS[i][0]-POS[i-1][0], dy=POS[i][1]-POS[i-1][1];
+    acc+=Math.sqrt(dx*dx+dy*dy); ISLE_LEN.push(acc);
+  }
+}
+function buildMap(){
+  const wrap=$('#mapWrap');
+  if(!$('#world')) wrap.innerHTML=mapMarkup();
+  buildSea();
+  $('#trail').setAttribute('d',trailD());
+  $('#trailG').setAttribute('d',trailD());
+  buildIsles();
+  measureTrail();
+  if(partyAt<0) partyAt=Math.max(0,Math.min(LAST_STAGE-1,(S.stage||1)-1));
+  partyLen=ISLE_LEN[partyAt]||0;
+  renderParty(); drawParty();
+  const hint=$('#mapHint');
+  /* v3.0: финал — только после ВСЕХ материков, иначе таблица умножения недостижима */
+  if(S.crystals.length>=LAST_STAGE){
+    hint.innerHTML='Все '+LAST_STAGE+' материков пройдены! 🎉 Ты выучил буквы, цифры, слоги, слова, примеры <b>и всю таблицу умножения</b>. Пора устраивать салют!';
+    if(!$('#btnTheatre')){
+      const b=el('button','btn primary','🎉 Финальный салют!'); b.id='btnTheatre';
+      b.onclick=()=>{ A.sfx('click'); openFinal(); };
+      hint.parentNode.insertBefore(b,hint.nextSibling);
+    }
+  } else if(S.crystals.length>=MAIN_STAGES){
+    hint.innerHTML='Ты прошёл '+MAIN_STAGES+' главных материков! 🎉 Дальше — <b>Большой театр</b>, <b>Замок Винкс</b> и четыре материка <b>таблицы умножения</b>.';
+  } else {
+    hint.textContent='Нажми на материк — герои отправятся в путь. По дороге кто-нибудь обязательно встретится!';
+  }
+}
+function renderParty(){
+  const g=$('#partyG'); if(!g) return;
+  const team=(S.team.length?S.team:['masha']).slice(0,4);
+  let s='';
+  team.forEach((k,i)=>{
+    const x=(i-(team.length-1)/2)*34;
+    s+=figAt(x,(i%2)?7:0,k);
+  });
+  g.innerHTML=s;
+}
+/* точка на тропинке: обычно берём из SVG, иначе — по ломаной между материками */
+function pathPt(len){
+  const p=$('#trail');
+  if(p && typeof p.getPointAtLength==='function'){
+    try{ return p.getPointAtLength(len); }catch(e){}
+  }
+  const seg=[]; let total=0;
+  for(let i=1;i<POS.length;i++){
+    const dx=POS[i][0]-POS[i-1][0], dy=POS[i][1]-POS[i-1][1];
+    const l=Math.sqrt(dx*dx+dy*dy); seg.push({a:POS[i-1],b:POS[i],l:l}); total+=l;
+  }
+  let d=Math.max(0,Math.min(total,len));
+  for(let i=0;i<seg.length;i++){
+    if(d<=seg[i].l||i===seg.length-1){
+      const t=seg[i].l?Math.max(0,Math.min(1,d/seg[i].l)):0;
+      return {x:seg[i].a[0]+(seg[i].b[0]-seg[i].a[0])*t, y:seg[i].a[1]+(seg[i].b[1]-seg[i].a[1])*t};
+    }
+    d-=seg[i].l;
+  }
+  return {x:POS[0][0],y:POS[0][1]};
+}
+function drawParty(){
+  const g=$('#partyG'); if(!g) return;
+  const pt=pathPt(partyLen);
+  g.setAttribute('transform','translate('+pt.x.toFixed(1)+','+pt.y.toFixed(1)+')');
+}
+function stopWalk(){
+  walkGen++;                                  // любой старый поход больше не жилец
+  if(walkRAF) cancelAnimationFrame(walkRAF);
+  walkRAF=null;
+  const g=$('#partyG'); if(g) g.classList.remove('walking');
+}
+function walkTo(i,cb,noMeet){
+  const gen=++walkGen;
+  const target=ISLE_LEN[i]||0;
+  if(Math.abs(target-partyLen)<3){ partyAt=i; partyLen=target; drawParty(); if(cb)cb(); return; }
+  const dir=target>partyLen?1:-1;
+  const start=partyLen, mid=start+(target-start)*0.5;
+  const far=Math.abs(target-start)>260;
+  let met=!!noMeet, last=performance.now();
+  const g=$('#partyG'); if(g) g.classList.add('walking');
+  function step(now){
+    if(gen!==walkGen) return;                 // поход отменили — выходим
+    const dt=Math.min(0.06,Math.max(0,(now-last)/1000)); last=now;
+    partyLen+=dir*250*dt;
+    if((dir>0&&partyLen>=target)||(dir<0&&partyLen<=target)){
+      partyLen=target; drawParty(); stopWalk(); partyAt=i; if(cb)cb(); return;
+    }
+    drawParty();
+    if(far && !met && ((dir>0&&partyLen>=mid)||(dir<0&&partyLen<=mid))){
+      met=true; stopWalk();
+      meetGuest(()=>walkTo(i,cb,true));
+      return;
+    }
+    walkRAF=requestAnimationFrame(step);
+  }
+  walkRAF=requestAnimationFrame(step);
+}
+function pickGuest(){
+  const out=CHAR_KEYS.filter(k=>S.team.indexOf(k)<0);
+  return out.length?pick(out):pick(CHAR_KEYS);
+}
+function meetGuest(cb){
+  const k=pickGuest(), c=CHARS[k];
+  const p=$('#trail'), g=$('#guestG'), bub=$('#mapBubble');
+  if(!g) { if(cb)cb(); return; }
+  const pt=pathPt(partyLen);
+  g.innerHTML=figAt(0,0,k);
+  g.setAttribute('transform','translate('+(pt.x+62)+','+pt.y+')');
+  g.classList.add('show');
+  const phrase=pick(c.hi);
+  bub.innerHTML='<span class="gbName">'+c.n+'</span><span class="gbText">'+phrase+'</span>';
+  bub.classList.add('show');
+  placeBubble(pt.x+62,pt.y);
+  const canJoin=S.team.length<TEAM_MAX && S.team.indexOf(k)<0 && Math.random()<0.4;
+  /* v3.0: гость на карте больше не уходит на полуслове */
+  const T0=Date.now(), MIN=5500, CAP=14000;
+  const est=Math.min(CAP, Math.max(MIN, 2600+String(phrase).length*95));
+  let done=false;
+  function finish(){
+    if(done) return; done=true;
+    bub.classList.remove('show'); g.classList.remove('show');
+    if(canJoin){
+      S.team.push(k); save(); renderParty();
+      toast('👋 '+c.n+' теперь с тобой!','ok');
+      setTimeout(()=>sayAs(k,'Я теперь с тобой!'),400);
+    }
+    setTimeout(()=>{ g.innerHTML=''; if(cb)cb(); }, canJoin?1200:500);
+  }
+  A.sfx('pop');
+  sayAs(k,phrase,()=>{ setTimeout(finish, Math.max(900, MIN-(Date.now()-T0))); });
+  setTimeout(finish, est);
+}
+function placeBubble(x,y){
+  const bub=$('#mapBubble'), wrap=$('#mapWrap');
+  if(!bub||!wrap) return;
+  const r=wrap.getBoundingClientRect();
+  const sx=r.width/1000, sy=r.height/780;   // v3.0: viewBox стал 1000×780
+  let left=(x+40)*sx, top=(y-170)*sy;
+  left=Math.max(8,Math.min(r.width-250,left));
+  top=Math.max(6,top);
+  bub.style.left=left+'px'; bub.style.top=top+'px';
+}
+function onIsleClick(i){
+  if(mapBusy) return;
+  const done=S.crystals.indexOf(i)>=0;
+  if(i>S.stage && !done){
+    toast('🔒 Сначала пройди предыдущий материк','bad');
+    sayAs(S.hero||'masha','Сначала надо пройти предыдущий материк!',1.05,1.2);
+    return;
+  }
+  A.sfx('click');
+  mapBusy=true;
+  walkTo(i-1,()=>{ mapBusy=false; startStage(i,false); });   // i — номер материка (1..7), в путь — индекс (0..6)
+}
+/* =========================================================
+   B4. СЕССИЯ ИГРЫ
+   ========================================================= */
+let session = {stage:1,list:[],idx:0,boss:false,lock:false};
+let CUR = null, ATTEMPTS = 0, VOICE = {r:1.05,p:1.2};
+const SKY = {
+  flowers:['☀️','🌻','🦋','🌼','🍃'], forest:['🌲','🌲','🌿','🍂','🍃','🐿️'],
+  pond:['💧','🪷','🐸','🫧','🍃'], gears:['⚙️','🔧','💡','🔩','📐'],
+  village:['🏡','🌾','🐄','🚜','🥛'], sweet:['🌫','🧁','🍭','🎂','✨'],
+  space:['🚀','⭐','🛰️','🌙','✨'], theatre:['🎭','🎪','🎈','🎊','🎩']
+};
+function locBg(loc){
+  return 'linear-gradient(180deg,'+mix(loc.sand,1.08)+' 0%, #FFFFFF 42%, '+mix(loc.grass,1.18)+' 100%)';
+}
+function setBg(loc){
+  const bg=$('#bg'); bg.style.background=locBg(loc); bg.innerHTML='';
+  const list=SKY[loc.deco]||SKY.flowers;
+  // на локациях со счётом (цифры, арифметика) фон почти пустой — чтобы не путал ребёнка
+  const quiet = (loc.deco==='forest'||loc.deco==='sweet');
+  const count = quiet ? 4 : 10;
+  const maxOpacity = quiet ? 0.25 : 0.55;
+  const maxFont = quiet ? 40 : 60;
+  for(let i=0;i<count;i++){
+    const s=el('span','deco',pick(list));
+    s.style.left=(2+rnd(94))+'%'; s.style.top=(5+rnd(88))+'%';
+    s.style.fontSize=(22+rnd(maxFont-22))+'px';
+    s.style.animationDelay=(-rnd(16))+'s';
+    s.style.animationDuration=(12+rnd(10))+'s';
+    s.style.opacity=(0.12+rnd(maxOpacity*100-12)/100).toFixed(2);
+    bg.appendChild(s);
+  }
+}
+function objRow(n,emoji,startIdx){
+  const w=el('div','objects');
+  for(let i=0;i<n;i++){ const o=el('span','obj',emoji); o.style.animationDelay=((i+(startIdx||0))*0.05)+'s'; w.appendChild(o); }
+  return w;
+}
+function pickHosts(){
+  const pool=S.team.length?S.team:['masha'];
+  const a=Math.random()<0.6?pick(pool):pick(CHAR_KEYS);
+  let b=null;
+  if(Math.random()<0.45){
+    let t=0;
+    do { b=(pool.length>1&&Math.random()<0.5)?pick(pool):pick(CHAR_KEYS); t++; } while(b===a&&t<12);
+  }
+  return [a,b];
+}
+function setHosts(a,b){
+  const ha=$('#hostA'), hb=$('#hostB');
+  ha.innerHTML='<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">'+faceSVG(a)+'</svg>';
+  ha.style.animation='none'; void ha.offsetWidth; ha.style.animation='';
+  if(b&&CHARS[b]){
+    hb.style.display='flex';
+    hb.innerHTML='<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">'+faceSVG(b)+'</svg>';
+    hb.style.animation='none'; void hb.offsetWidth; hb.style.animation='';
+  } else hb.style.display='none';
+}
+function startStage(id,bossMode){
+  session={stage:id,idx:0,boss:!!bossMode,lock:false,list:[]};
+  if(bossMode){
+    session.list=buildBoss(id);
+  } else {
+    if(!S.plan||!S.plan[id]){ if(!S.plan) S.plan={}; if(!S.prog) S.prog={}; S.plan[id]=makePlan(id); S.prog[id]=0; save(); }
+    session.list=S.plan[id];
+    session.idx=S.prog[id]||0;
+  }
+  setBg(locOf(id));
+  show('scr-game');
+  if(bossMode) bossIntro(id); else nextTask();
+}
+function bossIntro(id){
+  const loc=locOf(id), b=loc.boss, c=CHARS[b];
+  session.lock=true;
+  const area=$('#taskArea'); area.innerHTML='';
+  setHosts(b,null);
+  VOICE={r:c.r,p:c.p};
+  $('#bubbleText').textContent='Я — '+c.bossTitle||c.n;
+  const box=el('div','lbox');
+  const figBox=el('div','bossFig'); elSVG(figBox, walkSVG(b)); box.appendChild(figBox);
+  box.appendChild(el('div','bossName',loc.bossTitle||c.n));
+  const BOSS_SAY={
+    ladybug:'Я Леди Баг! Пока ты не решишь три задания, злодей не сдастся!',
+    spiderman:'Я Человек-паук! Знания — это сила. Пройди три испытания!',
+    supercat:'Я Супер Кот! Мяу-миссия: три задания до салюта!',
+    rumi:'Я Руми! Споём и решим три задания в Замке Винкс!'
+  };
+  const say=BOSS_SAY[b]||('Страж '+loc.name+'а! Чтобы пройти дальше, выполни мои три задания.');
+  box.appendChild(el('div','bossSay',say));
+  const btn=el('button','btn ok','Я готов! 💪');
+  btn.onclick=()=>{ A.sfx('click'); session.lock=false; nextTask(); };
+  box.appendChild(btn);
+  area.appendChild(box);
+  setProgress(0,3,'Страж локации');
+  TTS.stop(); TTS.say('Я — '+(loc.bossTitle||c.n)+'! '+pick(c.hi),c.r,c.p);
+}
+function nextTask(){
+  session.lock=false;
+  if(session.idx>=session.list.length){
+    if(session.boss) finishStage();
+    else startStage(session.stage,true);
+    return;
+  }
+  runTask(taskFrom(session.list[session.idx],session.boss));
+  const total=session.list.length;
+  setProgress(session.idx,total,(session.boss?'Страж: ':'Задание ')+(session.idx+1)+' из '+total);
+}
+function runTask(task){
+  session.lock=false;
+  const area=$('#taskArea'); area.innerHTML='';
+  ATTEMPTS=0; CUR={task:task,hintFn:null};
+  const hosts=pickHosts();
+  const main=hosts[0]||'masha';
+  setHosts(main,hosts[1]);
+  VOICE={r:CHARS[main].r,p:CHARS[main].p};
+  $('#bubbleText').textContent=task.text;
+  const ctx={
+    area:area,
+    speak:t=>TTS.say(t,VOICE.r,VOICE.p),
+    title:t=>{ const h=el('div','taskTitle',t); area.appendChild(h); return h; },
+    choice:(items,isRight,opts)=>mkChoice(ctx,items,isRight,opts),
+    setHint:f=>{ CUR.hintFn=f; },
+    correct:()=>onCorrect(),
+    wrong:()=>onWrong()
+  };
+  try{
+    task.mount(ctx);
+    TTS.say(task.text,VOICE.r,VOICE.p);
+  }catch(err){
+    console.error('task mount failed:',err);
+    showTaskError(task, err.message||String(err));
+  }
+}
+function showTaskError(task, msg){
+  const area=$('#taskArea');
+  area.innerHTML='';
+  const box=el('div','lbox');
+  box.appendChild(el('div','taskTitle','😕 Задание не открылось'));
+  box.appendChild(el('p','sub','Что-то сломалось в этом задании. Не страшно — нажми «Дальше», и игра перепрыгнет на следующее.'));
+  if(msg) box.appendChild(el('p','sub',msg));
+  const btn=el('button','btn ok','Дальше →');
+  btn.onclick=()=>{ session.lock=true; session.idx++; if(!session.boss){ S.prog[session.stage]=session.idx; save(); } setTimeout(()=>{ if(session.idx>=session.list.length){ if(session.boss) finishStage(); else startStage(session.stage,true); } else nextTask(); },100); };
+  box.appendChild(btn);
+  area.appendChild(box);
+  toast('⚠️ Пропускаю задание','bad');
+}
+function onCorrect(){
+  if(session.lock) return;
+  session.lock=true;
+  S.solved++; save();
+  A.sfx('correct');
+  const p=pick(PRAISE);
+  toast('✅ '+p,'ok');
+  TTS.stop(); TTS.say(p,VOICE.r,VOICE.p);
+  const a=$('#taskArea'), r=a.getBoundingClientRect();
+  burst(r.left+r.width/2, r.top+Math.min(r.height,120));
+  setTimeout(()=>{
+    session.idx++;
+    if(!session.boss){ S.prog[session.stage]=session.idx; save(); }
+    const meet = !session.boss && session.idx>0 && session.idx%4===0 && session.idx<session.list.length;
+    if(meet) guestVisit(nextTask); else nextTask();
+  },1500);
+}
+function onWrong(){
+  S.mistakes++; save();
+  A.sfx('wrong');
+  ATTEMPTS++;
+  const m=pick(RETRY);
+  toast('🤔 '+m,'bad');
+  TTS.stop(); TTS.say(m,VOICE.r,VOICE.p);
+  if(ATTEMPTS>=2 && CUR.hintFn) setTimeout(()=>{ if(CUR&&CUR.hintFn) CUR.hintFn(); },900);
+}
+function mkChoice(ctx,items,isRight,opts){
+  opts=opts||{};
+  const row=el('div','choices');
+  const btns=[];
+  items.forEach(it=>{
+    const b=el('button','opt '+(opts.cls||'')+(it.cls?' '+it.cls:''));
+    b.innerHTML=it.t;
+    b.onclick=()=>{
+      if(session.lock||b.disabled) return;
+      A.sfx('click');
+      if(isRight(it)){ b.classList.add('good'); burstAt(b); ctx.correct(); }
+      else { b.classList.add('wrong'); b.disabled=true; ctx.wrong(); }
+    };
+    row.appendChild(b); btns.push(b);
+  });
+  if(opts.hintText) ctx.setHint(()=>{
+    for(let i=0;i<items.length;i++){ if(isRight(items[i])){ btns[i].classList.add('hinted'); break; } }
+    TTS.stop(); TTS.say(opts.hintText,VOICE.r,VOICE.p);
+  });
+  return row;
+}
+/* гость по дороге (внутри этапа) */
+function guestVisit(cb){
+  const k=pickGuest(), c=CHARS[k];
+  let box=$('#guestBox');
+  if(!box){
+    box=el('div','guestBox'); box.id='guestBox';
+    document.body.appendChild(box);
+  }
+  const phrase=pick(c.hi);
+  box.innerHTML='<div class="gbFig">'+walkSVG(k)+'</div><div class="gbSay"><b>'+c.n+'</b><span>'+phrase+'</span></div>';
+  box.classList.add('show');
+  const join=S.team.length<TEAM_MAX && S.team.indexOf(k)<0 && Math.random()<0.35;
+  /* v3.0: гость больше не исчезает на полуслове.
+     Минимум 5.5 с на экране, дальше ждём реального конца речи (onend),
+     страховка — по оценке длины фразы, максимум 14 с. */
+  const T0=Date.now(), MIN=5500, CAP=14000;
+  const est=Math.min(CAP, Math.max(MIN, 2600+String(phrase).length*95));
+  let done=false;
+  function finish(){
+    if(done) return; done=true;
+    box.classList.remove('show');
+    if(join){ S.team.push(k); save(); toast('👋 '+c.n+' теперь с тобой!','ok'); renderParty(); }
+    setTimeout(cb,join?900:420);
+  }
+  A.sfx('pop');
+  sayAs(k,phrase,()=>{ setTimeout(finish, Math.max(900, MIN-(Date.now()-T0))); });
+  setTimeout(finish, est);
+}
+
+const SYL_C='МНРЛКТСДПБВГЗШЖЧХФ'.split('');
+const SYL_V='АОУЫЭЯЁЮИЕ'.split('');
+/* =========================================================
+   B5-B11. УЧЕБНЫЙ ПЛАН И ЗАДАНИЯ (упрощённый порядок)
+   1 — все буквы, 2 — цифры 1..10, 3 — слоги-обнимашки,
+   4 — числа 10..100 (ряд с шагом), 5 — слова по слогам,
+   6 — сложение и вычитание, 7 (бонус) — таблица умножения
+   ========================================================= */
+const SYL = ['МА','ПА','НА','КА','РА','СО','ТО','МУ','КУ','ДЕ','ТИ','ША'];
+
+function rowItem(hard){
+  const s = hard ? pick([5,10,10]) : pick([1,1,2,2,5,10]);
+  const maxStart = 100-3*s;                   // чтобы весь ряд влез в 100
+  const a = 10 + rnd(Math.max(1, maxStart-9)); // от 10 до maxStart
+  return {k:'R',a:a,s:s,p:1+rnd(3)};
+}
+function arithItem(max){
+  if(Math.random()<0.55){
+    const a=1+rnd(Math.max(2,max-2));
+    const b=1+rnd(Math.max(1,max-a));
+    return {k:'A',a:a,b:b,op:'+'};
+  }
+  const a=3+rnd(Math.max(2,max-2));
+  const b=1+rnd(Math.max(1,a-1));
+  return {k:'A',a:a,b:b,op:'-'};
+}
+/* v3.0
+   ПРАВИЛО: все этапы, кроме таблицы умножения, каждый раз строятся ЗАНОВО
+   и перемешиваются — ребёнок не должен запоминать порядок.
+   Таблица умножения (10–13) идёт СТРОГО по порядку: 1×1,1×2… 2×1,2×2… и т.д.
+*/
+const MULT_RANGE = 5;                     // для 5 лет: 1×1 … 5×5
+function multPlan(stage){
+  const ms = stage===10?[1] : stage===11?[2] : stage===12?[3] : [4,5];
+  const out=[];
+  ms.forEach(m=>{ for(let n=1;n<=MULT_RANGE;n++) out.push({k:'M',a:n,b:m}); });
+  return out;                              // НЕ перемешиваем — порядок учебный
+}
+function makePlan(stage){
+  /* ---------- таблица умножения: 4 части, строго по порядку ---------- */
+  if(stage>=10 && stage<=13) return multPlan(stage);
+
+  if(stage===1) return shuffle(ALPHA.slice()).map(L=>({k:'L',v:L}));
+  if(stage===2) return shuffle([1,2,3,4,5,6,7,8,9,10]).map(n=>({k:'N',v:n}));
+  if(stage===3) return shuffle(SYL.slice()).map(s=>({k:'S',v:s}));
+  if(stage===4){
+    return shuffle([11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,99]).slice(0,10).map(n=>({k:'H',v:n}));
+  }
+  if(stage===5){
+    const ws=shuffle(WORDS.filter(w=>w[1].length>=2&&w[1].length<=3)).slice(0,8);
+    return ws.map(w=>({k:'W',v:w[0]}));
+  }
+  if(stage===6){
+    const out=[];
+    for(let i=0;i<10;i++) out.push(arithItem(i<5?10:20));
+    return shuffle(out);
+  }
+  /* ---------- 7, 8, 9: обзор-микс всего пройденного (рандом) ---------- */
+  if(stage===7||stage===8||stage===9){
+    const out=[];
+    for(let i=0;i<10;i++){
+      const r=Math.random();
+      if(r<0.22)      out.push({k:'L',v:pick(ALPHA)});
+      else if(r<0.40) out.push({k:'N',v:1+rnd(10)});
+      else if(r<0.55) out.push({k:'S',v:pick(SYL)});
+      else if(r<0.68) out.push({k:'H',v:pick([11,14,17,20,23,30,40,50,60,75,88,99])});
+      else if(r<0.84) out.push({k:'W',v:pick(WORDS.filter(w=>w[1].length>=2&&w[1].length<=3))[0]});
+      else            out.push(arithItem(20));
+    }
+    return shuffle(out);
+  }
+  /* ---------- запасной вариант: случайная цифра, НЕ всегда 3 ---------- */
+  return [{k:'N',v:1+rnd(10)}];
+}
+function taskFrom(it,hard){
+  switch(it.k){
+    case 'L': {
+      const hasWord=!!WORDS_BY_LETTER[it.v];
+      if(hasWord && Math.random()<0.42) return tLetterSound(it.v);
+      return tLetterFind(it.v,hard);
+    }
+    case 'N': return tDigit(it.v, it.v<=3);
+    case 'S': return tSyllable(it.v);
+    case 'H': return tNumber10_100(it.v);
+    case 'W': return tWord(it.v);
+    case 'A': return tArith(it);
+    case 'M': return tMult(it);
+  }
+  return tDigit(1+rnd(10),true);   // v3.0: случайная цифра, а не всегда 3
+}
+/* ---------- ТЕМАТИЧЕСКИЕ ЗАДАНИЯ ГЕРОЕВ ---------- */
+/* Леди Баг (loc3 — слоги): обёртка над tSyllable с подачей от лица героя */
+function tLadybug(){
+  const s=pick(SYL);
+  const phrases=[
+    'Злодей прячется за слогом '+s+'! Сложи его и поймай нарушителя!',
+    'Чтобы спасти Париж, собери магический слог '+s+'!',
+    'Троллей много, но нам нужен только слог '+s+'. Обними буквы!'
+  ];
+  const base=tSyllable(s);
+  return {
+    text: pick(phrases),
+    mount(ctx){
+      ctx.area.appendChild(el('div','wordPic','🐞'));
+      base.mount(ctx);
+      ctx.setHint(()=>{ TTS.stop(); TTS.say('Леди Баг на подсказке: сначала '+LNAME[s[0]]+', потом '+LNAME[s[1]]+'!',1.10,1.40); });
+    }
+  };
+}
+/* Человек-паук (loc6 — сложение/вычитание): обёртка над tArith с темой паутины */
+function tSpiderman(){
+  const it=arithItem(20);
+  const phrases=[
+    'Паутина тянется через '+it.a+' '+ (it.op==='+'?'точек, добавь ещё '+it.b:'точек, но '+it.b+' порвались') +'. Сколько осталось?',
+    'Спасаем соседа: в лифте было '+it.a+' человек, вошло '+it.b+'. Сколько теперь?',
+    'Дядя Бен говорил: с большой силой... решай пример из '+it.a+' и '+it.b+'!'
+  ];
+  const base=tArith(it);
+  return {
+    text: pick(phrases),
+    mount(ctx){
+      ctx.area.appendChild(el('div','wordPic','🕷️'));
+      base.mount(ctx);
+      ctx.setHint(()=>{ TTS.stop(); TTS.say('Человек-паук на подсказке: '+it.a+(it.op==='+'?' плюс ':' минус ')+it.b+' равно '+(it.op==='+'?it.a+it.b:it.a-it.b)+'!',1.0,1.20); });
+    }
+  };
+}
+function buildBoss(stage){
+  const out=[];
+  for(let i=0;i<3;i++){
+    if(stage===1) out.push(tLetterFind(pick(ALPHA),true));
+    else if(stage===2) out.push(i===2 ? tNeighbour() : tDigit(1+rnd(10),Math.random()<0.5));
+    else if(stage===3) out.push(tLadybug());
+    else if(stage===4) out.push(tNumber10_100(10+rnd(90)));
+    else if(stage===5) out.push(tWord(pick(WORDS.filter(w=>w[1].length>=3))[0]));
+    else if(stage===6) out.push(tSpiderman());
+    else if(stage>=10 && stage<=13){
+      /* v3.0 босс таблицы умножения: факты ИМЕННО этого блока, в случайном порядке */
+      const ms = stage===10?[1] : stage===11?[2] : stage===12?[3] : [4,5];
+      out.push(tMult({k:'M',a:1+rnd(MULT_RANGE),b:pick(ms)}));
+    }
+    else if(stage===7||stage===8||stage===9){
+      /* босс-микс: берём тип из плана этапа, чтобы не выпадало три раза одно и то же */
+      const r=Math.random();
+      if(r<0.28)      out.push(tLetterFind(pick(ALPHA),true));
+      else if(r<0.52) out.push(tDigit(1+rnd(10),Math.random()<0.5));
+      else if(r<0.70) out.push(tSyllable(pick(SYL)));
+      else if(r<0.85) out.push(tNumber10_100(pick([12,17,23,30,45,50,68,74,99])));
+      else            out.push(tArith(arithItem(20)));
+    }
+    else out.push(tMult({k:'M',a:pick([2,3,4]),b:2+rnd(5)}));
+  }
+  return out;
+}
+
+/* ---------- 1. БУКВЫ ---------- */
+function tLetterFind(L,hard){
+  const target = Math.random()<0.5 ? L : L.toLowerCase();
+  const cnt = hard?5:4;
+  const sim = SIM[L]||[];
+  const src = shuffle(hard ? sim.concat(ALPHA,sim) : ALPHA.filter(c=>c!==L && sim.indexOf(c)<0));
+  const set=[target];
+  for(let i=0;i<src.length && set.length<cnt;i++){
+    const v = Math.random()<0.5 ? src[i] : src[i].toLowerCase();
+    if(v.toLowerCase()!==target.toLowerCase() && set.indexOf(v)<0) set.push(v);
+  }
+  const opts=shuffle(set);
+  return {
+    text:'Найди букву '+LNAME[L],
+    mount(ctx){
+      ctx.title('Найди эту букву');
+      const box=el('div','lbox');
+      box.appendChild(el('div','bigLetter',target));
+      box.appendChild(ctx.choice(opts.map(o=>({v:o,t:o})), it=>it.v===target,
+        {cls:'sm',hintText:'Это буква '+LNAME[L]+'. Найди такую же.'}));
+      ctx.area.appendChild(box);
+    }
+  };
+}
+function tLetterSound(L){
+  const w=WORDS_BY_LETTER[L][0], e=WORDS_BY_LETTER[L][1];
+  const keys=Object.keys(WORDS_BY_LETTER).filter(c=>c!==L);
+  const opts=shuffle([L].concat(uniqPick(keys,2)));
+  return {
+    text:'С какой буквы начинается слово '+w+'?',
+    mount(ctx){
+      ctx.title('С какой буквы начинается слово?');
+      const box=el('div','lbox');
+      box.appendChild(el('div','wordPic',e));
+      box.appendChild(el('div','wordName',w.toUpperCase()));
+      box.appendChild(ctx.choice(opts.map(o=>({v:o,t:o})), it=>it.v===L,
+        {hintText:'Слово '+w+' начинается с буквы '+LNAME[L]}));
+      ctx.area.appendChild(box);
+    }
+  };
+}
+
+/* ---------- 2. ЦИФРЫ 1..10 ---------- */
+function tDigit(n,mode){
+  const k=pick(Object.keys(OBJ));
+  const opts=shuffle(uniqPick([1,2,3,4,5,6,7,8,9,10].filter(v=>v!==n),3).concat([n]));
+  return {
+    text: mode ? ('Покажи цифру '+n) : ('Сосчитай предметы и покажи цифру'),
+    mount(ctx){
+      ctx.title(mode?('Покажи цифру '+n):'Сколько тут предметов?');
+      const box=el('div','lbox');
+      box.appendChild(objRow(n,OBJ[k]));
+      if(mode) box.appendChild(el('div','bigLetter',String(n)));
+      box.appendChild(ctx.choice(opts.map(o=>({v:o,t:o})), it=>it.v===n,
+        {cls:'sm',hintText:'Считай: один, два, три… Тут '+n}));
+      ctx.area.appendChild(box);
+    }
+  };
+}
+function tNeighbour(){
+  const n=2+rnd(8);
+  const after=Math.random()<0.5;
+  const right=after?n+1:n-1;
+  const opts=shuffle(uniqPick([n,right+(after?1:-1),right+(after?2:-2),right+(after?3:-3)].filter(v=>v>0&&v!==right),3).concat([right]));
+  return {
+    text: after?('Какое число идёт после '+n+'?'):('Какое число стоит перед '+n+'?'),
+    mount(ctx){
+      ctx.title(after?('Следующее за '+n):('Перед числом '+n));
+      const row=el('div','objects');
+      [n-1,n,n+1].forEach(v=>{ if(v<1)return; const d=el('div','opt sm',v); if(v===n) d.style.outline='5px solid #FFC94D'; row.appendChild(d); });
+      const box=el('div','lbox');
+      box.appendChild(row);
+      box.appendChild(ctx.choice(opts.map(o=>({v:o,t:o})), it=>it.v===right,
+        {cls:'sm',hintText: after?('После '+n+' идёт '+right):('Перед '+n+' стоит '+right)}));
+      ctx.area.appendChild(box);
+    }
+  };
+}
+
+/* ---------- 3. СЛОГИ-ОБНИМАШКИ ---------- */
+function tSyllable(s){
+  const need=s.split('');
+  const letters=shuffle(need.concat(uniqPick(SYL_C.concat(SYL_V).filter(c=>c!==need[0]&&c!==need[1]),2)));
+  return {
+    text:'Сложи слог '+s,
+    mount(ctx){
+      ctx.title('Нажми буквы по порядку — пусть они обнимутся!');
+      const box=el('div','lbox');
+      const res=el('div','syllResult','? + ? = ?');
+      box.appendChild(res);
+      const drift=el('div','drift');
+      const nodes={};
+      let sel=[];
+      letters.forEach((L,i)=>{
+        const f=el('div','letterFloat',L);
+        const lx=6+(i%4)*26+rnd(4), ty=6+(i%2)*40+rnd(8);
+        f.style.left='max(4px, calc('+lx+'% - 84px))';
+        f.style.top ='max(2px, calc('+ty+'% - 40px))';
+        f.style.animationDelay=(-rnd(9))+'s';
+        f.style.animationDuration=(7+rnd(5))+'s';
+        f.onclick=()=>{
+          if(session.lock) return;
+          A.sfx('pop');
+          if(sel.indexOf(L)>=0) return;
+          sel.push(L); f.classList.add('sel');
+          if(sel.length===2){
+            if(sel.join('')===s){
+              res.textContent=need[0]+' + '+need[1]+' = '+s;
+              res.style.color='#2E7D32';
+              burstAt(drift);
+              ctx.correct();
+            } else {
+              sel=[];
+              letters.forEach(x=>{ if(nodes[x]) nodes[x].classList.remove('sel'); });
+              res.textContent='? + ? = ?';
+              ctx.wrong();
+            }
+          } else res.textContent=sel[0]+' + ? = ?';
+        };
+        drift.appendChild(f); nodes[L]=f;
+      });
+      box.appendChild(drift);
+      ctx.area.appendChild(box);
+      ctx.setHint(()=>{
+        letters.forEach(x=>nodes[x].classList.remove('hinted'));
+        need.forEach(x=>{ if(nodes[x]) nodes[x].classList.add('hinted'); });
+        TTS.stop(); TTS.say('Сначала '+LNAME[need[0]]+', потом '+LNAME[need[1]],VOICE.r,VOICE.p);
+      });
+    }
+  };
+}
+
+/* ---------- 4. ЧИСЛА 10..100 (знакомство с двузначными) ---------- */
+function tNumber10_100(n){
+  const opts=shuffle(uniqPick([n-1,n+1,n-10,n+10,Math.max(10,n-2),Math.min(99,n+2)].filter(v=>v>=10&&v<=99&&v!==n),3).concat([n]));
+  return {
+    text:'Покажи число '+n,
+    mount(ctx){
+      ctx.title('Найди число '+n+' среди других');
+      const box=el('div','lbox');
+      box.appendChild(el('div','bigLetter',String(n)));
+      box.appendChild(ctx.choice(opts.map(o=>({v:o,t:o})), it=>it.v===n,
+        {cls:'sm',hintText:'Это число '+n+'. Найди такое же.'}));
+      ctx.area.appendChild(box);
+    }
+  };
+}
+/* ---------- 5. СЛОВА ПО СЛОГАМ ---------- */
+function tWord(word){
+  const rec=WORDS.filter(w=>w[0]===word)[0];
+  const syl=rec[1], e=rec[2];
+  return {
+    text:'Собери слово '+word,
+    mount(ctx){
+      ctx.title('Переставь кубики — собери слово');
+      let placed=[], free=shuffle(syl.map((s,i)=>({s:s,id:i})));
+      const board=el('div','board');
+      const slotsWrap=el('div','slots'), poolWrap=el('div','pool');
+      board.appendChild(slotsWrap); board.appendChild(poolWrap);
+      ctx.area.appendChild(el('div','wordPic',e));
+      ctx.area.appendChild(board);
+      const foot=el('div','btnRow');
+      const bMix=el('button','btn ghost','🔀 Перемешать');
+      const bClr=el('button','btn ghost','✖️ Убрать всё');
+      bMix.onclick=()=>{ if(session.lock)return; A.sfx('pop'); free=shuffle(free.concat(placed)); placed=[]; render(); };
+      bClr.onclick=()=>{ if(session.lock)return; A.sfx('pop'); free=free.concat(placed); placed=[]; render(); };
+      foot.appendChild(bMix); foot.appendChild(bClr);
+      ctx.area.appendChild(foot);
+      function makeCube(it){
+        const c=el('div','cube',it.s); c.dataset.sid=it.id;
+        c.addEventListener('pointerdown',ev=>startDrag(ev,c,it));
+        return c;
+      }
+      function render(){
+        slotsWrap.innerHTML=''; poolWrap.innerHTML='';
+        placed.forEach(it=>slotsWrap.appendChild(makeCube(it)));
+        for(let i=placed.length;i<syl.length;i++) slotsWrap.appendChild(el('div','slot',String(i+1)));
+        free.forEach(it=>poolWrap.appendChild(makeCube(it)));
+      }
+      function check(){
+        if(placed.length<syl.length) return;
+        if(placed.map(x=>x.s).join('')===syl.join('')){ burstAt(slotsWrap); ctx.correct(); }
+        else { ctx.wrong(); setTimeout(()=>{ free=shuffle(free.concat(placed)); placed=[]; render(); },800); }
+      }
+      let drag=null;
+      function startDrag(ev,cube,it){
+        if(session.lock) return;
+        ev.preventDefault();
+        const r=cube.getBoundingClientRect();
+        const ghost=cube.cloneNode(true); ghost.className='cube ghost';
+        ghost.style.left=r.left+'px'; ghost.style.top=r.top+'px';
+        ghost.style.width=r.width+'px'; ghost.style.height=r.height+'px';
+        document.body.appendChild(ghost);
+        const ph=el('div','placeholder');
+        cube.classList.add('hidden');
+        cube.parentNode.insertBefore(ph,cube);
+        drag={cube,ghost,ph,from:cube.parentNode,it,sx:ev.clientX,sy:ev.clientY,moved:false};
+        window.addEventListener('pointermove',onMove);
+        window.addEventListener('pointerup',onUp,{once:true});
+      }
+      function onMove(ev){
+        if(!drag) return;
+        if(Math.abs(ev.clientX-drag.sx)>6||Math.abs(ev.clientY-drag.sy)>6) drag.moved=true;
+        drag.ghost.style.left=(ev.clientX-46)+'px';
+        drag.ghost.style.top=(ev.clientY-42)+'px';
+        const t=document.elementFromPoint(ev.clientX,ev.clientY);
+        if(!t||!t.closest) return;
+        const cubeEl=t.closest('.cube');
+        if(cubeEl && cubeEl!==drag.cube && cubeEl.parentNode && (cubeEl.parentNode===slotsWrap||cubeEl.parentNode===poolWrap)){
+          const r=cubeEl.getBoundingClientRect();
+          cubeEl.parentNode.insertBefore(drag.ph, (ev.clientX<r.left+r.width/2)?cubeEl:cubeEl.nextSibling);
+        } else if(t.classList && t.classList.contains('slot')){
+          slotsWrap.insertBefore(drag.ph,t);
+        }
+      }
+      function onUp(){
+        window.removeEventListener('pointermove',onMove);
+        if(!drag) return;
+        const d=drag; drag=null;
+        d.ghost.remove(); d.cube.classList.remove('hidden');
+        d.ph.parentNode.insertBefore(d.cube,d.ph); d.ph.remove();
+        if(!d.moved){
+          if(d.from===poolWrap){ free=free.filter(x=>x.id!==d.it.id); placed.push(d.it); }
+          else { placed=placed.filter(x=>x.id!==d.it.id); free.unshift(d.it); }
+          A.sfx('pop'); render(); check(); return;
+        }
+        const ids=Array.prototype.slice.call(slotsWrap.querySelectorAll('.cube')).map(n=>+n.dataset.sid);
+        const all=placed.concat(free);
+        placed=ids.map(id=>all.filter(x=>x.id===id)[0]).filter(Boolean);
+        free=all.filter(x=>ids.indexOf(x.id)<0);
+        A.sfx('pop'); render(); check();
+      }
+      render();
+      ctx.setHint(()=>{
+        const need=syl[placed.length];
+        const it=free.filter(f=>f.s===need)[0];
+        if(it){ free.splice(free.indexOf(it),1); placed.push(it); render(); check(); }
+        TTS.stop(); TTS.say('Дальше ставим слог '+need,VOICE.r,VOICE.p);
+      });
+    }
+  };
+}
+
+/* ---------- 6. СЛОЖЕНИЕ И ВЫЧИТАНИЕ ---------- */
+function tArith(it){
+  const k=pick(['🍎','🍄','🪙','🌰','🎈']);
+  const right = it.op==='+' ? it.a+it.b : it.a-it.b;
+  const cands=[right+1,right-1,right+2,right-2,right+3].filter(v=>v>=0&&v!==right);
+  const opts=shuffle(uniqPick(cands,3).concat([right]));
+  return {
+    text: it.op==='+' ? ('К '+it.a+' прибавили '+it.b+'. Сколько стало?')
+                      : ('Было '+it.a+', убрали '+it.b+'. Сколько осталось?'),
+    mount(ctx){
+      ctx.title(it.a+' '+(it.op==='+'?'+':'−')+' '+it.b+' = ?');
+      const row=el('div','objects');
+      if(it.op==='+'){
+        row.appendChild(objRow(it.a,k,0));
+        const s=el('div','sign','+'); row.appendChild(s);
+        row.appendChild(objRow(it.b,k,it.a));
+      } else {
+        for(let i=0;i<it.a;i++){
+          const o=el('span','obj',k);
+          o.style.animationDelay=(i*0.04)+'s';
+          if(i>=it.a-it.b){ o.style.opacity='.25'; o.style.filter='grayscale(1)'; }
+          row.appendChild(o);
+        }
+        const s=el('div','sign','−'); row.appendChild(s);
+        const gone=el('div','obj',k); gone.style.opacity='.25'; gone.style.filter='grayscale(1)';
+        row.appendChild(gone);
+      }
+      const box=el('div','lbox');
+      box.appendChild(row);
+      box.appendChild(ctx.choice(opts.map(o=>({v:o,t:o})), it2=>it2.v===right,
+        {cls:'sm',hintText: it.a+(it.op==='+'?' плюс ':' минус ')+it.b+' — получается '+right}));
+      ctx.area.appendChild(box);
+    }
+  };
+}
+
+/* ---------- 7. УМНОЖЕНИЕ (бонус) ---------- */
+function tMult(it){
+  const rows=it.a, per=it.b, right=rows*per;
+  const cands=[right+per,right-per,right+1,right-1,right+2].filter(v=>v>0&&v!==right);
+  const opts=shuffle(uniqPick(cands,3).concat([right]));
+  const emoji=pick(['🍯','🪴','🌰','🎈']);
+  return {
+    text:'По '+per+' в '+rows+' рядах. Сколько всего?',
+    mount(ctx){
+      ctx.title('По '+per+' в '+rows+' рядах');
+      const g=el('div','grid');
+      g.style.gridTemplateColumns='repeat('+per+', auto)';
+      for(let i=0;i<rows*per;i++) g.appendChild(el('div','cell',emoji));
+      const box=el('div','lbox');
+      box.appendChild(g);
+      box.appendChild(el('div','wordName',per+' × '+rows+' = ?'));
+      box.appendChild(ctx.choice(opts.map(o=>({v:o,t:o})), it2=>it2.v===right,
+        {cls:'sm',hintText:'Это то же самое, что '+Array(rows).fill(per).join(' + ')+' = '+right}));
+      ctx.area.appendChild(box);
+    }
+  };
+}
+
+function badgeSVG(loc,locked){
+  return '<svg viewBox="-100 -80 200 170" class="badge" xmlns="http://www.w3.org/2000/svg">'
+    + '<circle cx="0" cy="8" r="90" fill="#FFFFFF" stroke="#FFD86A" stroke-width="6" stroke-dasharray="10 8"/>'
+    + (locked
+        ? '<g transform="translate(0,10)"><rect x="-18" y="-8" width="36" height="30" rx="7" fill="#9AA7B8"/><path d="M-10 -8 v-9 a10 10 0 0 1 20 0 v9" fill="none" stroke="#9AA7B8" stroke-width="7"/><circle cx="0" cy="7" r="5" fill="#EFEAE2"/></g>'
+        : '<g transform="translate(0,12) scale(0.82)">'+isleArt(loc)+'</g>')
+    + '</svg>';
+}
+function teamRow(){
+  const row=el('div','teamRow');
+  (S.team.length?S.team:['masha']).forEach((k,i)=>{
+    const c=el('div','teamChip');
+    c.innerHTML='<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">'+faceSVG(k)+'</svg>';
+    c.title=CHARS[k].n; c.style.animationDelay=(i*0.07)+'s';
+    row.appendChild(c);
+  });
+  return row;
+}
+function finishStage(){
+  const id=session.stage, loc=locOf(id);
+  if(S.crystals.indexOf(id)<0) S.crystals.push(id);
+  if(S.stickers.indexOf(id)<0) S.stickers.push(id);
+  if(id<LAST_STAGE) S.stage=Math.min(LAST_STAGE,id+1);
+  delete S.plan[id]; delete S.prog[id];
+  let joined=null;
+  const rest=CHAR_KEYS.filter(k=>S.team.indexOf(k)<0);
+  if(rest.length && S.team.length<TEAM_MAX && Math.random()<0.85){ joined=pick(rest); S.team.push(joined); }
+  save(); updateTop();
+
+  $('#rwTitle').textContent = id===7 ? 'Бонус пройден!' : 'Материк пройден!';
+  $('#rwSub').innerHTML = loc.name+' — ты получил кристалл 💎';
+  const rw=$('#rwSticker'); rw.innerHTML='';
+  const card=el('div','stickerCard');
+  card.innerHTML=badgeSVG(loc,false)+'<div class="heroName">'+loc.sticker.t+'</div>';
+  rw.appendChild(card);
+  const tw=$('#rwTeam'); tw.innerHTML='';
+  tw.appendChild(el('div','sub','Твоя команда ('+S.team.length+' '+numWord(S.team.length,['герой','героя','героев'])+'):'));
+  tw.appendChild(teamRow());
+  setBg(loc);
+  show('scr-reward');
+  A.sfx('crystal');
+  TTS.stop(); TTS.say('Ура! Ты собрал кристалл на '+loc.name+'!',1.05,1.25);
+  if(joined) setTimeout(()=>{
+    const c=CHARS[joined];
+    sayAs(joined,'Я '+c.n+'! Можно я пойду с тобой?');
+    toast('👋 '+c.n+' теперь с тобой!','ok');
+  },2600);
+  const next=$('#btnNext');
+  next.textContent = (id>=LAST_STAGE) ? '🎉 Финальный салют!' : ('Дальше → '+locOf(id+1).name);
+}
+function openFinal(){
+  setBg(locOf(9));
+  show('scr-final');
+  const body=$('#finalBody'); body.innerHTML='';
+  body.appendChild(el('div','wordPic','🎉'));
+  body.appendChild(el('h2',' ','Страна Знаний спасена!'));
+  const p=el('p','sub','— Ура! Все кристаллы собраны, а Руми и Супер Кот помогли тебе пройти все испытания. Заклятие снято, Страна Знаний снова читает и считает!');
+  body.appendChild(p);
+  const cr=el('div','crystalRow');
+  for(let i=0;i<LAST_STAGE;i++) cr.appendChild(el('span',' ','💎'));
+  body.appendChild(cr);
+  const st=el('p','sub','<b>Диплом Знаний</b><br>Пройдено заданий: '+S.solved+'<br>Материков освобождено: '+S.crystals.length+' из '+LAST_STAGE);
+  st.style.color='#33465C'; body.appendChild(st);
+  body.appendChild(teamRow());
+  A.sfx('win');
+  TTS.stop(); TTS.say('Поздравляю! Заклятие снято, Страна Знаний свободна!',1.0,1.2);
+  S.finished=true; save();
+  setTimeout(fireworks,600);
+}
+function fireworks(){
+  const c=$('#fw'); c.style.display='block';
+  c.width=window.innerWidth; c.height=window.innerHeight;
+  const g=c.getContext?c.getContext('2d'):null;
+  if(!g){ c.style.display='none'; return; }
+  const parts=[], colors=['#FFC94D','#FF9EC4','#9ED8FF','#B6F0A8','#FFE9A8','#D7B9FF','#FFFFFF'];
+  function boom(x,y,col){
+    for(let i=0;i<72;i++){
+      const a=Math.random()*Math.PI*2, s=1+Math.random()*5.5;
+      parts.push({x:x,y:y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:1,col:col});
+    }
+  }
+  let t=0;
+  function frame(){
+    g.clearRect(0,0,c.width,c.height); t++;
+    if(t%22===0) boom(80+Math.random()*(c.width-160), 60+Math.random()*Math.max(80,c.height*0.5), pick(colors));
+    for(let i=parts.length-1;i>=0;i--){
+      const p=parts[i];
+      p.x+=p.vx; p.y+=p.vy; p.vy+=0.055; p.vx*=0.99; p.life-=0.011;
+      g.globalAlpha=Math.max(0,p.life); g.fillStyle=p.col;
+      g.beginPath(); g.arc(p.x,p.y,3.4,0,Math.PI*2); g.fill();
+      if(p.life<=0) parts.splice(i,1);
+    }
+    g.globalAlpha=1;
+    if(t<700) requestAnimationFrame(frame);
+    else { g.clearRect(0,0,c.width,c.height); c.style.display='none'; }
+  }
+  frame();
+  A.sfx('win');
+  for(let i=0;i<5;i++) setTimeout(()=>A.sfx('crystal'),800+i*1100);
+}
+function buildAlbum(){
+  const g=$('#albumGrid'); g.innerHTML='';
+  LOCS.forEach(loc=>{
+    const got=S.stickers.indexOf(loc.id)>=0 || (loc.id===9 && S.crystals.length>=MAIN_STAGES);
+    const card=el('div','stickerCard'+(got?'':' locked'));
+    card.innerHTML=badgeSVG(loc,!got)+'<div class="heroName">'+loc.sticker.t+'</div>'
+      + '<div class="is">'+(got?'Получено':'Ещё впереди')+'</div>';
+    g.appendChild(card);
+  });
+  const t=el('div','stickerCard');
+  t.innerHTML='<div class="teamRow"></div><div class="heroName">Команда</div>'
+    + '<div class="is">'+S.team.length+' '+numWord(S.team.length,['герой','героя','героев'])+'</div>';
+  const tr=t.querySelector('.teamRow');
+  (S.team.length?S.team:['masha']).forEach(k=>{
+    const c=el('div','teamChip small');
+    c.innerHTML='<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">'+faceSVG(k)+'</svg>';
+    c.title=CHARS[k].n; tr.appendChild(c);
+  });
+  g.appendChild(t);
+}
+
+/* =========================================================
+   B13. МЕНЮ И ИНИЦИАЛИЗАЦИЯ
+   ========================================================= */
+function syncToggles(){
+  $('#tgMusic').classList.toggle('on',S.settings.music);
+  $('#tgVoice').classList.toggle('on',S.settings.voice);
+  $('#tgSfx').classList.toggle('on',S.settings.sfx);
+  $('#menuStats').textContent='Решено заданий: '+S.solved+'  •  Кристаллов: '+S.crystals.length+'/'+LAST_STAGE+'  •  Команда: '+S.team.length;
+}
+function updateTop(){
+  const cw=$('#crystals'); cw.innerHTML='';
+  for(let i=1;i<=7;i++) cw.appendChild(el('div','crys'+(S.crystals.indexOf(i)>=0?' on':'')+(i===7?' bonus':'')));
+  $('#btnMusic').classList.toggle('off',!S.settings.music);
+  $('#btnVoice').classList.toggle('off',!S.settings.voice);
+}
+function init(){
+  TTS.init();
+  if(!S.plan) S.plan={};
+  if(!S.prog) S.prog={};
+  buildHeroGrid(); updateTop(); syncToggles();
+  setBg(locOf(Math.min(S.stage,LAST_STAGE))); setProgress(0,0);
+
+  $('#btnPlay').onclick=()=>{
+    A.ensure(); A.startMusic(); A.sfx('click');
+    if(!S.hero){ show('scr-hero'); return; }
+    setBg(locOf(Math.min(S.stage,LAST_STAGE))); buildMap(); show('scr-map'); setProgress(0,0);
+  };
+  $('#btnAlbum2').onclick=$('#btnAlbum').onclick=()=>{ A.sfx('click'); buildAlbum(); show('scr-album'); };
+  $('#btnBackAlbum').onclick=()=>{
+    A.sfx('click');
+    if(S.hero){ setBg(locOf(Math.min(S.stage,LAST_STAGE))); buildMap(); show('scr-map'); }
+    else show('scr-title');
+  };
+  $('#btnBack1').onclick=()=>{ A.sfx('click'); show('scr-title'); };
+  $('#btnStart').onclick=()=>{
+    if(!S.hero){ toast('Выбери героя!','bad'); return; }
+    A.ensure(); A.startMusic(); A.sfx('click');
+    sayAs(S.hero,'Я '+CHARS[S.hero].n+'! Отправляемся на Карту Знаний!');
+    setBg(locOf(Math.min(S.stage,LAST_STAGE))); buildMap(); show('scr-map'); setProgress(0,0);
+  };
+  $('#btnMap').onclick=$('#btnMap2').onclick=$('#btnMap3').onclick=()=>{
+    A.sfx('click'); TTS.stop(); mapBusy=false; stopWalk();
+    setBg(locOf(Math.min(S.stage,LAST_STAGE))); buildMap(); show('scr-map'); setProgress(0,0);
+  };
+  $('#btnNext').onclick=()=>{
+    A.sfx('click');
+    if(S.crystals.length>=LAST_STAGE){ openFinal(); return; }   // v3.0: финал после всех 13
+    setBg(locOf(Math.min(S.stage,LAST_STAGE))); buildMap(); show('scr-map'); setProgress(0,0);
+  };
+  $('#btnFire').onclick=()=>{ A.sfx('click'); fireworks(); };
+  $('#btnReplay').onclick=()=>{ if(CUR) TTS.say(CUR.task.text,VOICE.r,VOICE.p); };
+  $('#btnHint').onclick=()=>{
+    A.sfx('click');
+    if(CUR&&CUR.hintFn) CUR.hintFn();
+    else if(CUR){ TTS.stop(); TTS.say(CUR.task.text,VOICE.r,VOICE.p); }
+  };
+  $('#btnMusic').onclick=()=>{
+    S.settings.music=!S.settings.music; save();
+    if(S.settings.music){ A.ensure(); A.startMusic(); } else A.stopMusic();
+    updateTop(); syncToggles();
+  };
+  $('#btnVoice').onclick=()=>{
+    S.settings.voice=!S.settings.voice; save();
+    if(!S.settings.voice) TTS.stop(); else if(CUR) TTS.say(CUR.task.text,VOICE.r,VOICE.p);
+    updateTop(); syncToggles();
+  };
+  $('#btnMenu').onclick=()=>{ A.sfx('click'); syncToggles(); $('#menu').classList.add('active'); };
+  $('#btnCloseMenu').onclick=()=>{ A.sfx('click'); $('#menu').classList.remove('active'); };
+  $('#tgMusic').onclick=()=>{ S.settings.music=!S.settings.music; save(); if(S.settings.music){A.ensure();A.startMusic();} else A.stopMusic(); updateTop(); syncToggles(); };
+  $('#tgVoice').onclick=()=>{ S.settings.voice=!S.settings.voice; save(); if(!S.settings.voice) TTS.stop(); updateTop(); syncToggles(); };
+  $('#tgSfx').onclick=()=>{ S.settings.sfx=!S.settings.sfx; save(); A.sfx('click'); syncToggles(); };
+  $('#btnReset').onclick=()=>{
+    const b=$('#btnReset');
+    if(b.dataset.armed!=='1'){
+      const old=b.textContent;
+      b.dataset.armed='1';
+      b.textContent='Точно сбросить?';
+      setTimeout(()=>{ if(b.dataset.armed==='1'){ b.dataset.armed=''; b.textContent=old; } },3500);
+      TTS.say('Нажми ещё раз, чтобы сбросить прогресс.',1.0,1.1);
+      return;
+    }
+    b.dataset.armed=''; b.textContent='Сбросить прогресс';
+    S=defSave(); save();
+    partyAt=-1; updateTop(); syncToggles(); buildHeroGrid();
+    $('#menu').classList.remove('active');
+    setBg(LOCS[0]); show('scr-title');
+    toast('🧹 Прогресс сброшен!','ok');
+  };
+  $('#btnResetTeam').onclick=()=>{
+    const names=(S.team.length?S.team:['masha']).map(k=>CHARS[k].n).join(', ');
+    toast('👥 Команда: '+S.team.length,'ok');
+    TTS.say('В твоей команде: '+names,1.05,1.2);
+  };
+  document.addEventListener('pointerdown',()=>{ A.ensure(); if(S.settings.music&&!A.playing) A.startMusic(); },{once:true});
+  window.addEventListener('resize',()=>{ if($('#scr-map').classList.contains('active')) buildMap(); });
+  const st=$('#titleStats');
+  if(S.crystals.length) st.textContent='Продолжаем! Кристаллов: '+S.crystals.length+' из '+LAST_STAGE+'. Заданий решено: '+S.solved;
+  else st.textContent='Девять материков, шесть кристаллов и команда храбрых героев во главе с Леди Баг!';
+}
+document.addEventListener('DOMContentLoaded',init);
+
+</script>
+</body>
+</html>
