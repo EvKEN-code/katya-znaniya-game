@@ -126,8 +126,10 @@ h2{font-size:clamp(22px,4vw,34px);margin:2px 0 12px;text-align:center}
 /* слоги */
 .drift{position:relative;width:100%;max-width:680px;height:200px;overflow:visible}
 .letterFloat{position:absolute;width:96px;height:96px;border-radius:26px;background:#fff;font-size:52px;font-weight:800;
-  display:flex;align-items:center;justify-content:center;box-shadow:0 6px 0 #C9DCEC,0 10px 20px rgba(51,70,92,.16);cursor:pointer}
+  display:flex;align-items:center;justify-content:center;box-shadow:0 6px 0 #C9DCEC,0 10px 20px rgba(51,70,92,.16);cursor:pointer;
+  animation:swim 9s ease-in-out infinite alternate}
 .letterFloat.sel{background:linear-gradient(180deg,#FFE7A3,#FFC94D);box-shadow:0 6px 0 #E0A32E}
+@keyframes swim{from{transform:translate(0,0) rotate(-5deg)}to{transform:translate(34px,-26px) rotate(6deg)}}
 .syllResult{font-size:clamp(50px,10vw,88px);font-weight:800;letter-spacing:6px;min-height:96px;display:flex;align-items:center}
 
 /* слова */
@@ -280,6 +282,7 @@ h2{font-size:clamp(22px,4vw,34px);margin:2px 0 12px;text-align:center}
   /* плавающие буквы (слоги) — меньше и с меньшей амплитудой дрейфа */
   .drift{height:180px}
   .letterFloat{width:72px;height:72px;font-size:38px;border-radius:20px}
+  @keyframes swim{from{transform:translate(0,0) rotate(-4deg)}to{transform:translate(12px,-14px) rotate(5deg)}}
   /* кнопки вариантов: гарантированно влезают по 3 в ряд */
   .choices{gap:10px}
   .opt{min-width:84px;min-height:76px;padding:8px 12px}
@@ -313,7 +316,7 @@ h2{font-size:clamp(22px,4vw,34px);margin:2px 0 12px;text-align:center}
     <section id="scr-title" class="screen active">
       <h1>🗺️ Карта Знаний</h1>
       <p class="sub">В Стране Знаний что-то пошло не так: буквы рассыпались, цифры потерялись, примеры перестали сходиться. Леди Баг, Супер Кот, Руми и Человек-паук зовут друзей на помощь!<br>
-        Собери 13 волшебных кристаллов — и устроим большой салют!</p>
+        Собери 6 волшебных кристаллов — и устроим большой салют!</p>
       <div class="card" style="text-align:center">
         <div style="font-size:64px;line-height:1.2">🌻💧🏡🔧🍫🚀</div>
         <div id="titleStats" class="stat"></div>
@@ -421,78 +424,6 @@ const pick = a => a[rnd(a.length)];
 function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=rnd(i+1); const t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
 function uniqPick(arr,n){ return shuffle(arr).slice(0,n); }
 function el(tag,cls,txt){ const e=document.createElement(tag); if(cls)e.className=cls; if(txt!=null)e.textContent=txt; return e; }
-const clamp = (v,a,b) => v<a?a:(v>b?b:v);
-
-/* =========================================================
-   antiOverlap — разносит абсолютно позиционированные
-   «плавающие» поля внутри контейнера так, чтобы они не
-   пересекались и не вылезали за края экрана.
-   Используется во всех задачах, где элементы летают
-   (слоги-обнимашки и т.п.). Работает в px, измеряет
-   реальные размеры после вставки в DOM, отталкивает
-   друг от друга итеративно + страхует границы.
-   ========================================================= */
-function antiOverlap(container){
-  if(!container) return;
-  const els = Array.prototype.slice.call(container.querySelectorAll('.letterFloat, .floatTile'));
-  if(els.length<2) return;
-  const cw = container.clientWidth || container.getBoundingClientRect().width;
-  const ch = container.clientHeight || 0;
-  // базовый размер одной плитки (для страховки, если замер не удался)
-  let base = 96;
-  els.forEach(e=>{ const r=e.getBoundingClientRect(); if(r.width>base) base=r.width; });
-  // координаты в системе контейнера (px от левого/верхнего края).
-  // Уникальный стартовый разброс по сетке — чтобы две одинаковые плитки
-  // (например, две «О» в слоге ТО) не лежали в одной точке и не слипались.
-  let P = els.map((e,idx)=>{
-    const cr=e.getBoundingClientRect(), pr=container.getBoundingClientRect();
-    let w=cr.width||base, h=cr.height||base;
-    const cols = Math.max(1, Math.floor((cw||680)/(w+8)));
-    const gx = (idx%cols)*(w+8) + 4;
-    const gy = ((idx/cols|0)%4)*(h+8) + 4;
-    let x = clamp(gx, 2, Math.max(2,(cw||680)-w-2));
-    let y = clamp(gy, 2, Math.max(2,(ch||200)-h-2));
-    return {e,x,y,w,h};
-  });
-  const pad = 6;
-  // 1) жёсткое отталкивание пересечений (коэффициент 1 — сдвиг ровно на
-  //    величину перекрытия, повторяем, пока всё не разойдётся).
-  //    После каждой пары прижимаем плитки обратно внутрь контейнера,
-  //    чтобы они не упирались в стену и не «залипали» в углу.
-  for(let it=0; it<400; it++){
-    let moved=false;
-    for(let i=0;i<P.length;i++){
-      for(let j=i+1;j<P.length;j++){
-        const a=P[i], b=P[j];
-        const ox=(a.w+pad+b.w)/2 - Math.abs(a.x+ a.w/2 - (b.x+b.w/2));
-        const oy=(a.h+pad+b.h)/2 - Math.abs(a.y+ a.h/2 - (b.y+b.h/2));
-        if(ox>0 && oy>0){
-          if(ox<=oy){
-            const s=(a.x+a.w/2)<=(b.x+b.w/2)?-1:1;
-            a.x+=s*ox; b.x-=s*ox;
-          } else {
-            const s=(a.y+a.h/2)<=(b.y+b.h/2)?-1:1;
-            a.y+=s*oy; b.y-=s*oy;
-          }
-          // не даём вылететь за стену — прижимаем внутрь сразу
-          const maxX=Math.max(2,(cw||680)-a.w-2), maxY=Math.max(2,(ch||200)-a.h-2);
-          a.x=clamp(a.x,2,maxX); a.y=clamp(a.y,2,maxY);
-          const maxX2=Math.max(2,(cw||680)-b.w-2), maxY2=Math.max(2,(ch||200)-b.h-2);
-          b.x=clamp(b.x,2,maxX2); b.y=clamp(b.y,2,maxY2);
-          moved=true;
-        }
-      }
-    }
-    if(!moved) break;
-  }
-  // 2) страховка границ (чтобы ничего не уплыло за экран)
-  P.forEach(p=>{
-    const maxX = Math.max(0, cw - p.w), maxY = Math.max(0, (container.clientHeight||p.h) - p.h);
-    p.x = clamp(p.x, 2, maxX-2);
-    p.y = clamp(p.y, 2, maxY-2);
-  });
-  P.forEach(p=>{ p.e.style.left=p.x+'px'; p.e.style.top=p.y+'px'; });
-}
 /* вставляет готовую строку с <svg>...</svg> в HTML-элемент, чтобы namespace сохранился */
 function elSVG(parent, svgStr){
   const wrap=document.createElement('div');
@@ -1524,9 +1455,6 @@ function runTask(task){
   };
   try{
     task.mount(ctx);
-    // v3.0.2: разносим плавающие поля, чтобы ничего не налезало
-    // друг на друга и не уезжало за край экрана (букивы/цифры/слоги)
-    antiOverlap(area);
     TTS.say(task.text,VOICE.r,VOICE.p);
   }catch(err){
     console.error('task mount failed:',err);
@@ -1872,11 +1800,11 @@ function tSyllable(s){
       let sel=[];
       letters.forEach((L,i)=>{
         const f=el('div','letterFloat',L);
-        // мягкий стартовый разброс (px); финальное безопасное
-        // раскладывание без пересечений делает antiOverlap() в runTask
-        const col=i%3, row=(i/3)|0;
-        f.style.left=(8+col*30)+'px';
-        f.style.top =(8+row*30)+'px';
+        const lx=6+(i%4)*26+rnd(4), ty=6+(i%2)*40+rnd(8);
+        f.style.left='max(4px, calc('+lx+'% - 84px))';
+        f.style.top ='max(2px, calc('+ty+'% - 40px))';
+        f.style.animationDelay=(-rnd(9))+'s';
+        f.style.animationDuration=(7+rnd(5))+'s';
         f.onclick=()=>{
           if(session.lock) return;
           A.sfx('pop');
@@ -2297,7 +2225,7 @@ function init(){
   window.addEventListener('resize',()=>{ if($('#scr-map').classList.contains('active')) buildMap(); });
   const st=$('#titleStats');
   if(S.crystals.length) st.textContent='Продолжаем! Кристаллов: '+S.crystals.length+' из '+LAST_STAGE+'. Заданий решено: '+S.solved;
-  else st.textContent='Тринадцать материков, тринадцать кристаллов и команда храбрых героев во главе с Леди Баг!';
+  else st.textContent='Девять материков, шесть кристаллов и команда храбрых героев во главе с Леди Баг!';
 }
 document.addEventListener('DOMContentLoaded',init);
 
