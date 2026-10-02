@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Карта Знаний — 3D</title>
+<style>
+  html,body{margin:0;height:100%;overflow:hidden;background:#07131f;
+    font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#eaf3fb}
+  #c{display:block;width:100%;height:100%}
+  .panel{position:fixed;background:rgba(10,24,38,.72);backdrop-filter:blur(10px);
+    border:1px solid rgba(120,190,255,.22);border-radius:16px;box-shadow:0 10px 34px rgba(0,0,0,.42)}
+  #top{left:18px;top:16px;padding:12px 18px}
+  #top h1{margin:0;font-size:19px;letter-spacing:.2px}
+  #top p{margin:4px 0 0;font-size:12.5px;color:#8fb4d4}
+  #bar{left:50%;transform:translateX(-50%);bottom:18px;padding:10px 12px;display:flex;gap:9px;flex-wrap:wrap;justify-content:center;max-width:94vw}
+  button{cursor:pointer;border:none;border-radius:11px;padding:10px 15px;font-size:13.5px;font-weight:700;
+    background:rgba(255,255,255,.10);color:#eaf3fb;transition:background .18s,transform .12s}
+  button:hover{background:rgba(255,255,255,.19)}
+  button:active{transform:scale(.96)}
+  button.on{background:linear-gradient(180deg,#ffd86a,#f0ad2e);color:#3a2a00}
+  #info{right:18px;top:16px;padding:14px 18px;width:238px;opacity:0;transform:translateY(-8px);
+    transition:.25s;pointer-events:none}
+  #info.show{opacity:1;transform:none}
+  #info .nm{font-size:16px;font-weight:800;margin-bottom:3px}
+  #info .sb{font-size:12.5px;color:#8fb4d4;line-height:1.35}
+  #info .bs{margin-top:9px;font-size:12.5px;color:#ffd88a}
+  #legend{left:18px;bottom:18px;padding:11px 15px;font-size:12.5px;color:#9dc0dd;line-height:1.6}
+  #legend b{color:#eaf3fb}
+  #hint{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);font-size:15px;color:#9dc0dd}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div id="top" class="panel">
+  <h1>🗺️ Карта Знаний — 3D</h1>
+  <p>Тринадцать материков Страны Знаний</p>
+</div>
+
+<div id="info" class="panel">
+  <div class="nm"></div>
+  <div class="sb"></div>
+  <div class="bs"></div>
+</div>
+
+<div id="legend" class="panel">
+  <b>Мышь:</b> тянуть — поворот, колесо — приближение<br>
+  <b>Палец:</b> тянуть — поворот, щипок — приближение
+</div>
+
+<div id="bar" class="panel">
+  <button id="bWalk">▶ Пройти путь</button>
+  <button id="bTop">⬆ Вид сверху</button>
+  <button id="bIso">◈ Обзор</button>
+  <button id="bCry">💎 Кристаллы</button>
+</div>
+
+<div id="hint">Загрузка 3D…</div>
+
+<script>
