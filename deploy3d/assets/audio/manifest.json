@@ -1,0 +1,892 @@
+{
+  "masha": {
+    "greetings": [
+      {
+        "file": "assets/audio/masha_g0.mp3",
+        "text": "Привет! Я Маша! Давай учиться!"
+      },
+      {
+        "file": "assets/audio/masha_g1.mp3",
+        "text": "Ого, сколько всего интересного!"
+      },
+      {
+        "file": "assets/audio/masha_g2.mp3",
+        "text": "Я уже всё умею, а ты?"
+      }
+    ]
+  },
+  "medved": {
+    "greetings": [
+      {
+        "file": "assets/audio/medved_g0.mp3",
+        "text": "Здравствуй! Я Миша-Медведь."
+      },
+      {
+        "file": "assets/audio/medved_g1.mp3",
+        "text": "Ну-ка, покажи, что умеешь!"
+      },
+      {
+        "file": "assets/audio/medved_g2.mp3",
+        "text": "Спокойно, тут ничего страшного."
+      }
+    ]
+  },
+  "fyodor": {
+    "greetings": [
+      {
+        "file": "assets/audio/fyodor_g0.mp3",
+        "text": "Привет! Я дядя Фёдор."
+      },
+      {
+        "file": "assets/audio/fyodor_g1.mp3",
+        "text": "Давай вместе разберёмся!"
+      },
+      {
+        "file": "assets/audio/fyodor_g2.mp3",
+        "text": "Интересно, а ты справишься?"
+      }
+    ]
+  },
+  "matroskin": {
+    "greetings": [
+      {
+        "file": "assets/audio/matroskin_g0.mp3",
+        "text": "Мяу! Я кот Матроскин."
+      },
+      {
+        "file": "assets/audio/matroskin_g1.mp3",
+        "text": "Хозяйство любит счёт!"
+      },
+      {
+        "file": "assets/audio/matroskin_g2.mp3",
+        "text": "Ну-ка, посчитаем?"
+      }
+    ]
+  },
+  "sharik": {
+    "greetings": [
+      {
+        "file": "assets/audio/sharik_g0.mp3",
+        "text": "Гав! Я Шарик!"
+      },
+      {
+        "file": "assets/audio/sharik_g1.mp3",
+        "text": "Давай, у тебя получится!"
+      },
+      {
+        "file": "assets/audio/sharik_g2.mp3",
+        "text": "Я всё сфотографирую!"
+      }
+    ]
+  },
+  "pechkin": {
+    "greetings": [
+      {
+        "file": "assets/audio/pechkin_g0.mp3",
+        "text": "Я Печкин. Посылку выдам только за задание!"
+      },
+      {
+        "file": "assets/audio/pechkin_g1.mp3",
+        "text": "Документик покажи! Шучу, считай."
+      },
+      {
+        "file": "assets/audio/pechkin_g2.mp3",
+        "text": "Без правильного ответа ничего не отдам."
+      }
+    ]
+  },
+  "luntik": {
+    "greetings": [
+      {
+        "file": "assets/audio/luntik_g0.mp3",
+        "text": "Привет! Я Лунтик!"
+      },
+      {
+        "file": "assets/audio/luntik_g1.mp3",
+        "text": "Давай играть, это так весело!"
+      },
+      {
+        "file": "assets/audio/luntik_g2.mp3",
+        "text": "Я с луны, там тоже считают!"
+      }
+    ]
+  },
+  "kuzya": {
+    "greetings": [
+      {
+        "file": "assets/audio/kuzya_g0.mp3",
+        "text": "Я Кузя-кузнечик!"
+      },
+      {
+        "file": "assets/audio/kuzya_g1.mp3",
+        "text": "Прыгай вместе со мной!"
+      },
+      {
+        "file": "assets/audio/kuzya_g2.mp3",
+        "text": "Скок-скок, и буква готова!"
+      }
+    ]
+  },
+  "pupsen": {
+    "greetings": [
+      {
+        "file": "assets/audio/pupsen_g0.mp3",
+        "text": "А я Пупсень!"
+      },
+      {
+        "file": "assets/audio/pupsen_g1.mp3",
+        "text": "Мы тут всё запутали, извини!"
+      },
+      {
+        "file": "assets/audio/pupsen_g2.mp3",
+        "text": "Попробуй собрать, если сможешь!"
+      }
+    ]
+  },
+  "simka": {
+    "greetings": [
+      {
+        "file": "assets/audio/simka_g0.mp3",
+        "text": "Привет! Я Симка-фиксик!"
+      },
+      {
+        "file": "assets/audio/simka_g1.mp3",
+        "text": "Фиксики знают, как всё устроено!"
+      },
+      {
+        "file": "assets/audio/simka_g2.mp3",
+        "text": "Чинить числа — моя работа!"
+      }
+    ]
+  },
+  "nolik": {
+    "greetings": [
+      {
+        "file": "assets/audio/nolik_g0.mp3",
+        "text": "Я Нолик! Люблю цифры!"
+      },
+      {
+        "file": "assets/audio/nolik_g1.mp3",
+        "text": "Ноль — тоже число, между прочим!"
+      },
+      {
+        "file": "assets/audio/nolik_g2.mp3",
+        "text": "Давай посчитаем по-фиксиковски!"
+      }
+    ]
+  },
+  "papus": {
+    "greetings": [
+      {
+        "file": "assets/audio/papus_g0.mp3",
+        "text": "Я Папус, главный фиксик."
+      },
+      {
+        "file": "assets/audio/papus_g1.mp3",
+        "text": "Без порядка техника не работает."
+      },
+      {
+        "file": "assets/audio/papus_g2.mp3",
+        "text": "Проверим твои знания."
+      }
+    ]
+  },
+  "masya": {
+    "greetings": [
+      {
+        "file": "assets/audio/masya_g0.mp3",
+        "text": "Я Мася!"
+      },
+      {
+        "file": "assets/audio/masya_g1.mp3",
+        "text": "Всё будет чики-чики!"
+      },
+      {
+        "file": "assets/audio/masya_g2.mp3",
+        "text": "Давай быстрее, не терпится!"
+      }
+    ]
+  },
+  "kolobok": {
+    "greetings": [
+      {
+        "file": "assets/audio/kolobok_g0.mp3",
+        "text": "Я Колобок, я от бабушки ушёл!"
+      },
+      {
+        "file": "assets/audio/kolobok_g1.mp3",
+        "text": "Покатились учиться!"
+      },
+      {
+        "file": "assets/audio/kolobok_g2.mp3",
+        "text": "Я круглый, как буква О!"
+      }
+    ]
+  },
+  "zayac": {
+    "greetings": [
+      {
+        "file": "assets/audio/zayac_g0.mp3",
+        "text": "Я Зайка! Считать умею быстро!"
+      },
+      {
+        "file": "assets/audio/zayac_g1.mp3",
+        "text": "Прыг-скок, и пример готов!"
+      },
+      {
+        "file": "assets/audio/zayac_g2.mp3",
+        "text": "Не бойся, я помогу!"
+      }
+    ]
+  },
+  "volk": {
+    "greetings": [
+      {
+        "file": "assets/audio/volk_g0.mp3",
+        "text": "Ну что, посчитаем?"
+      },
+      {
+        "file": "assets/audio/volk_g1.mp3",
+        "text": "Я тоже учился в лесной школе."
+      },
+      {
+        "file": "assets/audio/volk_g2.mp3",
+        "text": "Только не торопись."
+      }
+    ]
+  },
+  "lisa": {
+    "greetings": [
+      {
+        "file": "assets/audio/lisa_g0.mp3",
+        "text": "Я Лиса, я спрятала все буквы!"
+      },
+      {
+        "file": "assets/audio/lisa_g1.mp3",
+        "text": "Найдёшь — отдам!"
+      },
+      {
+        "file": "assets/audio/lisa_g2.mp3",
+        "text": "Хитрая загадка, правда?"
+      }
+    ]
+  },
+  "vinni": {
+    "greetings": [
+      {
+        "file": "assets/audio/vinni_g0.mp3",
+        "text": "Я Винни-Пух, люблю мёд и горшочки!"
+      },
+      {
+        "file": "assets/audio/vinni_g1.mp3",
+        "text": "Считать горшочки — моё любимое!"
+      },
+      {
+        "file": "assets/audio/vinni_g2.mp3",
+        "text": "Ой, кажется, я всё перепутал!"
+      }
+    ]
+  },
+  "pyatachok": {
+    "greetings": [
+      {
+        "file": "assets/audio/pyatachok_g0.mp3",
+        "text": "Я Пятачок!"
+      },
+      {
+        "file": "assets/audio/pyatachok_g1.mp3",
+        "text": "Ой-ой, давай вместе!"
+      },
+      {
+        "file": "assets/audio/pyatachok_g2.mp3",
+        "text": "Я очень стараюсь!"
+      }
+    ]
+  },
+  "ia": {
+    "greetings": [
+      {
+        "file": "assets/audio/ia_g0.mp3",
+        "text": "Я Иа. Всё равно ничего не получится…"
+      },
+      {
+        "file": "assets/audio/ia_g1.mp3",
+        "text": "Ну давай, попробуем."
+      },
+      {
+        "file": "assets/audio/ia_g2.mp3",
+        "text": "Хотя бы попытайся."
+      }
+    ]
+  },
+  "sova": {
+    "greetings": [
+      {
+        "file": "assets/audio/sova_g0.mp3",
+        "text": "Я Мудрая Сова."
+      },
+      {
+        "file": "assets/audio/sova_g1.mp3",
+        "text": "Загадка требует смекалки."
+      },
+      {
+        "file": "assets/audio/sova_g2.mp3",
+        "text": "Подумай хорошенько, дружок."
+      }
+    ]
+  },
+  "neznayka": {
+    "greetings": [
+      {
+        "file": "assets/audio/neznayka_g0.mp3",
+        "text": "Я Незнайка! А ты знаешь?"
+      },
+      {
+        "file": "assets/audio/neznayka_g1.mp3",
+        "text": "Я ничего не знаю, но очень стараюсь!"
+      },
+      {
+        "file": "assets/audio/neznayka_g2.mp3",
+        "text": "Ого, ты справишься лучше меня!"
+      }
+    ]
+  },
+  "znayka": {
+    "greetings": [
+      {
+        "file": "assets/audio/znayka_g0.mp3",
+        "text": "Я Знайка. Полёт требует точного счёта!"
+      },
+      {
+        "file": "assets/audio/znayka_g1.mp3",
+        "text": "Проверим готовность к старту."
+      },
+      {
+        "file": "assets/audio/znayka_g2.mp3",
+        "text": "Таблица умножения — пустяк для тебя!"
+      }
+    ]
+  },
+  "sineglazka": {
+    "greetings": [
+      {
+        "file": "assets/audio/sineglazka_g0.mp3",
+        "text": "Я Синеглазка, я люблю цветы и буквы!"
+      },
+      {
+        "file": "assets/audio/sineglazka_g1.mp3",
+        "text": "Давай учиться красиво!"
+      },
+      {
+        "file": "assets/audio/sineglazka_g2.mp3",
+        "text": "У тебя всё получится!"
+      }
+    ]
+  },
+  "vintik": {
+    "greetings": [
+      {
+        "file": "assets/audio/vintik_g0.mp3",
+        "text": "Я Винтик! Люблю собирать."
+      },
+      {
+        "file": "assets/audio/vintik_g1.mp3",
+        "text": "Собирай по порядку!"
+      },
+      {
+        "file": "assets/audio/vintik_g2.mp3",
+        "text": "Закрутим этот пример!"
+      }
+    ]
+  },
+  "shpuntik": {
+    "greetings": [
+      {
+        "file": "assets/audio/shpuntik_g0.mp3",
+        "text": "А я Шпунтик!"
+      },
+      {
+        "file": "assets/audio/shpuntik_g1.mp3",
+        "text": "Винтик — мой лучший друг!"
+      },
+      {
+        "file": "assets/audio/shpuntik_g2.mp3",
+        "text": "Соберём слово вместе!"
+      }
+    ]
+  },
+  "buratino": {
+    "greetings": [
+      {
+        "file": "assets/audio/buratino_g0.mp3",
+        "text": "Привет! Я Буратино!"
+      },
+      {
+        "file": "assets/audio/buratino_g1.mp3",
+        "text": "Мой ключик откроет любую дверь!"
+      },
+      {
+        "file": "assets/audio/buratino_g2.mp3",
+        "text": "Давай найдём правильный ответ!"
+      }
+    ]
+  },
+  "piero": {
+    "greetings": [
+      {
+        "file": "assets/audio/piero_g0.mp3",
+        "text": "Я Пьеро, грустный поэт…"
+      },
+      {
+        "file": "assets/audio/piero_g1.mp3",
+        "text": "Но с тобой мне веселее."
+      },
+      {
+        "file": "assets/audio/piero_g2.mp3",
+        "text": "Прочитаем эту букву вместе."
+      }
+    ]
+  },
+  "artemon": {
+    "greetings": [
+      {
+        "file": "assets/audio/artemon_g0.mp3",
+        "text": "Гав! Я Артемон!"
+      },
+      {
+        "file": "assets/audio/artemon_g1.mp3",
+        "text": "Я охраняю правильные ответы!"
+      },
+      {
+        "file": "assets/audio/artemon_g2.mp3",
+        "text": "Смелее, вперёд!"
+      }
+    ]
+  },
+  "gena": {
+    "greetings": [
+      {
+        "file": "assets/audio/gena_g0.mp3",
+        "text": "Я Гена, крокодил. Работаю в зоопарке."
+      },
+      {
+        "file": "assets/audio/gena_g1.mp3",
+        "text": "Посчитаем вместе?"
+      },
+      {
+        "file": "assets/audio/gena_g2.mp3",
+        "text": "Точь-в-точь как надо!"
+      }
+    ]
+  },
+  "cheburashka": {
+    "greetings": [
+      {
+        "file": "assets/audio/cheburashka_g0.mp3",
+        "text": "Я Чебурашка!"
+      },
+      {
+        "file": "assets/audio/cheburashka_g1.mp3",
+        "text": "Давай дружить и учиться!"
+      },
+      {
+        "file": "assets/audio/cheburashka_g2.mp3",
+        "text": "У меня уши большие — я всё слышу!"
+      }
+    ]
+  },
+  "karlson": {
+    "greetings": [
+      {
+        "file": "assets/audio/karlson_g0.mp3",
+        "text": "Я Карлсон, лучший в мире шалун!"
+      },
+      {
+        "file": "assets/audio/karlson_g1.mp3",
+        "text": "Сосчитай-ка цифры!"
+      },
+      {
+        "file": "assets/audio/karlson_g2.mp3",
+        "text": "Спокойствие, только спокойствие!"
+      }
+    ]
+  },
+  "malysh": {
+    "greetings": [
+      {
+        "file": "assets/audio/malysh_g0.mp3",
+        "text": "Я Малыш! Карлсон мой друг."
+      },
+      {
+        "file": "assets/audio/malysh_g1.mp3",
+        "text": "Давай учить буквы!"
+      },
+      {
+        "file": "assets/audio/malysh_g2.mp3",
+        "text": "Мне очень нравится играть!"
+      }
+    ]
+  },
+  "frekenbok": {
+    "greetings": [
+      {
+        "file": "assets/audio/frekenbok_g0.mp3",
+        "text": "Я Фрекен Бок. Люблю порядок!"
+      },
+      {
+        "file": "assets/audio/frekenbok_g1.mp3",
+        "text": "Числа должны стоять по порядку!"
+      },
+      {
+        "file": "assets/audio/frekenbok_g2.mp3",
+        "text": "Без порядка никуда!"
+      }
+    ]
+  },
+  "shapoklyak": {
+    "greetings": [
+      {
+        "file": "assets/audio/shapoklyak_g0.mp3",
+        "text": "Хи-хи! Я Шапокляк, я всё перепутала!"
+      },
+      {
+        "file": "assets/audio/shapoklyak_g1.mp3",
+        "text": "Примеры не сходятся — и пусть!"
+      },
+      {
+        "file": "assets/audio/shapoklyak_g2.mp3",
+        "text": "Отгадаешь — отдам кристалл!"
+      }
+    ]
+  },
+  "ladybug": {
+    "greetings": [
+      {
+        "file": "assets/audio/ladybug_g0.mp3",
+        "text": "Я Леди Баг! Справедливость победит!"
+      },
+      {
+        "file": "assets/audio/ladybug_g1.mp3",
+        "text": "Вместе мы всё решим!"
+      },
+      {
+        "file": "assets/audio/ladybug_g2.mp3",
+        "text": "Ты настоящий герой знаний!"
+      }
+    ]
+  },
+  "supercat": {
+    "greetings": [
+      {
+        "file": "assets/audio/supercat_g0.mp3",
+        "text": "Я Супер Кот! Буду рядом!"
+      },
+      {
+        "file": "assets/audio/supercat_g1.mp3",
+        "text": "Мяу-миссия выполнима!"
+      },
+      {
+        "file": "assets/audio/supercat_g2.mp3",
+        "text": "Ты справишься, я верю!"
+      }
+    ]
+  },
+  "rumi": {
+    "greetings": [
+      {
+        "file": "assets/audio/rumi_g0.mp3",
+        "text": "Я Руми! Давай петь и учиться!"
+      },
+      {
+        "file": "assets/audio/rumi_g1.mp3",
+        "text": "Музыка поможет запомнить!"
+      },
+      {
+        "file": "assets/audio/rumi_g2.mp3",
+        "text": "Ты просто сияешь отлично!"
+      }
+    ]
+  },
+  "spiderman": {
+    "greetings": [
+      {
+        "file": "assets/audio/spiderman_g0.mp3",
+        "text": "Я Человек-паук! Знания — это сила!"
+      },
+      {
+        "file": "assets/audio/spiderman_g1.mp3",
+        "text": "Сосчитаем, как паутину плетём!"
+      },
+      {
+        "file": "assets/audio/spiderman_g2.mp3",
+        "text": "Ты большой молодец!"
+      }
+    ]
+  },
+  "elsa": {
+    "greetings": [
+      {
+        "file": "assets/audio/elsa_g0.mp3",
+        "text": "Я Эльза, королева снегов!"
+      },
+      {
+        "file": "assets/audio/elsa_g1.mp3",
+        "text": "Холодный расчёт — точный расчёт!"
+      },
+      {
+        "file": "assets/audio/elsa_g2.mp3",
+        "text": "Отпусти и считай спокойно!"
+      }
+    ]
+  },
+  "anna": {
+    "greetings": [
+      {
+        "file": "assets/audio/anna_g0.mp3",
+        "text": "Я Анна! Я никого не брошу!"
+      },
+      {
+        "file": "assets/audio/anna_g1.mp3",
+        "text": "Давай решать вместе!"
+      },
+      {
+        "file": "assets/audio/anna_g2.mp3",
+        "text": "Ты справишься, я знаю!"
+      }
+    ]
+  },
+  "shrek": {
+    "greetings": [
+      {
+        "file": "assets/audio/shrek_g0.mp3",
+        "text": "Я Шрэк. Считать умею, между прочим!"
+      },
+      {
+        "file": "assets/audio/shrek_g1.mp3",
+        "text": "У нас в болоте свои порядки."
+      },
+      {
+        "file": "assets/audio/shrek_g2.mp3",
+        "text": "Ну-ка, покажи, на что способен!"
+      }
+    ]
+  },
+  "volkNP": {
+    "greetings": [
+      {
+        "file": "assets/audio/volkNP_g0.mp3",
+        "text": "Ну, погоди! Сейчас я всё посчитаю!"
+      },
+      {
+        "file": "assets/audio/volkNP_g1.mp3",
+        "text": "Я из лесной школы, между прочим!"
+      },
+      {
+        "file": "assets/audio/volkNP_g2.mp3",
+        "text": "Ну заяц, погоди!"
+      }
+    ]
+  },
+  "zayacNP": {
+    "greetings": [
+      {
+        "file": "assets/audio/zayacNP_g0.mp3",
+        "text": "Ну, погоди! Я быстро считаю!"
+      },
+      {
+        "file": "assets/audio/zayacNP_g1.mp3",
+        "text": "Прыг-скок — и пример готов!"
+      },
+      {
+        "file": "assets/audio/zayacNP_g2.mp3",
+        "text": "Не догонишь!"
+      }
+    ]
+  },
+  "krosh": {
+    "greetings": [
+      {
+        "file": "assets/audio/krosh_g0.mp3",
+        "text": "Я Крош! Йо-хо-хо!"
+      },
+      {
+        "file": "assets/audio/krosh_g1.mp3",
+        "text": "Давай прыгать и считать!"
+      },
+      {
+        "file": "assets/audio/krosh_g2.mp3",
+        "text": "Кро-о-ош, вперёд!"
+      }
+    ]
+  },
+  "ezhik": {
+    "greetings": [
+      {
+        "file": "assets/audio/ezhik_g0.mp3",
+        "text": "Я Ёжик. Я люблю порядок."
+      },
+      {
+        "file": "assets/audio/ezhik_g1.mp3",
+        "text": "Давай разберёмся потихоньку."
+      },
+      {
+        "file": "assets/audio/ezhik_g2.mp3",
+        "text": "У меня на иголках всё записано!"
+      }
+    ]
+  },
+  "nyusha": {
+    "greetings": [
+      {
+        "file": "assets/audio/nyusha_g0.mp3",
+        "text": "Я Нюша! Я самая красивая!"
+      },
+      {
+        "file": "assets/audio/nyusha_g1.mp3",
+        "text": "Давай учиться красиво!"
+      },
+      {
+        "file": "assets/audio/nyusha_g2.mp3",
+        "text": "Ой, какой хороший ответ!"
+      }
+    ]
+  },
+  "moana": {
+    "greetings": [
+      {
+        "file": "assets/audio/moana_g0.mp3",
+        "text": "Я Моана! Море зовёт меня!"
+      },
+      {
+        "file": "assets/audio/moana_g1.mp3",
+        "text": "Плыви туда, где трудно!"
+      },
+      {
+        "file": "assets/audio/moana_g2.mp3",
+        "text": "Считай, как волну ловишь!"
+      }
+    ]
+  },
+  "simba": {
+    "greetings": [
+      {
+        "file": "assets/audio/simba_g0.mp3",
+        "text": "Я Симба, я король!"
+      },
+      {
+        "file": "assets/audio/simba_g1.mp3",
+        "text": "Хакуна матата — учись без забот!"
+      },
+      {
+        "file": "assets/audio/simba_g2.mp3",
+        "text": "Ряв! Считаем вместе!"
+      }
+    ]
+  },
+  "rapunzel": {
+    "greetings": [
+      {
+        "file": "assets/audio/rapunzel_g0.mp3",
+        "text": "У меня самые длинные волосы!"
+      },
+      {
+        "file": "assets/audio/rapunzel_g1.mp3",
+        "text": "Я зажгу фонари и посчитаю!"
+      },
+      {
+        "file": "assets/audio/rapunzel_g2.mp3",
+        "text": "Свет всегда побеждает!"
+      }
+    ]
+  },
+  "praise": [
+    {
+      "file": "assets/audio/praise_0.mp3",
+      "text": "Молодец!"
+    },
+    {
+      "file": "assets/audio/praise_1.mp3",
+      "text": "Правильно!"
+    },
+    {
+      "file": "assets/audio/praise_2.mp3",
+      "text": "Умничка!"
+    },
+    {
+      "file": "assets/audio/praise_3.mp3",
+      "text": "Точно!"
+    },
+    {
+      "file": "assets/audio/praise_4.mp3",
+      "text": "Здорово!"
+    },
+    {
+      "file": "assets/audio/praise_5.mp3",
+      "text": "Верно!"
+    },
+    {
+      "file": "assets/audio/praise_6.mp3",
+      "text": "Супер!"
+    },
+    {
+      "file": "assets/audio/praise_7.mp3",
+      "text": "Отлично!"
+    },
+    {
+      "file": "assets/audio/praise_8.mp3",
+      "text": "Так держать!"
+    },
+    {
+      "file": "assets/audio/praise_9.mp3",
+      "text": "В точку!"
+    }
+  ],
+  "retry": [
+    {
+      "file": "assets/audio/retry_0.mp3",
+      "text": "Попробуй ещё раз!"
+    },
+    {
+      "file": "assets/audio/retry_1.mp3",
+      "text": "Не совсем, подумай!"
+    },
+    {
+      "file": "assets/audio/retry_2.mp3",
+      "text": "Ой! Давай ещё разок."
+    },
+    {
+      "file": "assets/audio/retry_3.mp3",
+      "text": "Почти! Ещё попытка."
+    },
+    {
+      "file": "assets/audio/retry_4.mp3",
+      "text": "Не сдавайся!"
+    }
+  ],
+  "system": {
+    "boss_intro": {
+      "file": "assets/audio/sys_boss_intro.mp3",
+      "text": "Испытание! Приготовил три задания."
+    },
+    "stage_complete": {
+      "file": "assets/audio/sys_stage_complete.mp3",
+      "text": "Материк пройден! Кристалл твой!"
+    },
+    "hero_joined": {
+      "file": "assets/audio/sys_hero_joined.mp3",
+      "text": "Новый герой присоединился к команде!"
+    },
+    "welcome": {
+      "file": "assets/audio/sys_welcome.mp3",
+      "text": "Добро пожаловать в Страну Знаний!"
+    },
+    "choose_hero": {
+      "file": "assets/audio/sys_choose_hero.mp3",
+      "text": "Выбери героя!"
+    },
+    "lets_go": {
+      "file": "assets/audio/sys_lets_go.mp3",
+      "text": "Вперёд, к знаниям!"
+    }
+  }
+}
