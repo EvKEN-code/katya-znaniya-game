@@ -1892,7 +1892,7 @@ function mkChoice(ctx,items,isRight,opts){
     b.innerHTML=it.t;
     b.onclick=()=>{
       if(session.lock||b.disabled) return;
-      A.sfx('click');
+      try{ A.unlock(); A.sfx('click'); }catch(e){}
       if(isRight(it)){ b.classList.add('good'); burstAt(b); ctx.correct(); }
       else { b.classList.add('wrong'); b.disabled=true; ctx.wrong(); }
     };
@@ -3017,7 +3017,10 @@ function showModal(html, buttons){
   card.innerHTML = html;
   (buttons||[]).forEach(function(b){
     const btn = el('button','btn '+(b.cls||'primary'), b.t);
-    btn.onclick = function(){ A.sfx('click'); if(b.fn) b.fn(); };
+    btn.onclick = function(){
+      try{ A.unlock(); A.sfx('click'); }catch(e){}
+      if(b.fn) b.fn();
+    };
     card.appendChild(btn);
   });
   m.appendChild(card);
@@ -3092,7 +3095,10 @@ function bossIntro(id){
 
   setTimeout(function(){
     const btn = el('button','btn primary','⚔️ Начать испытание');
-    btn.onclick = function(){ A.sfx('click'); nextTask(); };
+    btn.onclick = function(){
+      try{ A.unlock(); A.sfx('click'); }catch(e){}
+      nextTask();
+    };
     box.appendChild(btn);
   }, 260);
 }
@@ -3334,12 +3340,12 @@ renderer.domElement.addEventListener('click', function(ev){
   const loc = LOCS[i];
   const done = S.crystals.indexOf(loc.id) >= 0;
   if(!islandUnlocked(i)){
-    A.sfx('wrong');
+    try{ A.unlock(); A.sfx('wrong'); }catch(e){}
     toast('🔒 Сначала пройди предыдущий материк','bad');
     TTS.say('Сначала пройди предыдущий материк!', 1.05, 1.2);
     return;
   }
-  A.sfx('click');
+  try{ A.unlock(); A.sfx('click'); }catch(e){}
   if(done){
     showModal('<div class="rwIcon">' + ICONS[loc.id] + '</div><h2>' + loc.name + '</h2>'
       + '<p class="rwSub">' + loc.sub + '</p>'
@@ -3354,23 +3360,23 @@ renderer.domElement.addEventListener('click', function(ev){
 
 /* ---------- кнопки ---------- */
 document.getElementById('bHint').onclick = function(){
-  A.sfx('click');
+  try{ A.unlock(); A.sfx('click'); }catch(e){}
   if(session.lock) return;
   if(CUR && CUR.hintFn) CUR.hintFn();
   else toast('💡 Подсказка тут не нужна','ok');
 };
 document.getElementById('bMap').onclick = function(){
-  A.sfx('click');
+  try{ A.unlock(); A.sfx('click'); }catch(e){}
   panelShow(false);
   if(bossGroup){ scene.remove(bossGroup); bossGroup = null; }
   updateHUD(); refreshIslandStates(); refreshCrystals();
 };
 ['bAlbum','bAlbum2','bAlbum3'].forEach(function(id){
   const b = document.getElementById(id);
-  if(b) b.onclick = function(){ A.sfx('click'); showAlbum(); };
+  if(b) b.onclick = function(){ try{ A.unlock(); A.sfx('click'); }catch(e){} showAlbum(); };
 });
 document.getElementById('bMenu').onclick = function(){
-  A.sfx('click');
+  try{ A.unlock(); A.sfx('click'); }catch(e){}
   const total = LOCS.length;
   showModal(
     '<h2>⚙️ Меню</h2>'
